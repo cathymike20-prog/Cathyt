@@ -1,0 +1,3261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtomCraft | Interactive Atomic Explorer</title>
+  <meta name="description" content="Explore atomic structure, historic models, electron configurations, and nuclear stability through interactive HTML5 simulations, gamified challenges, and dynamic quizzes.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ==========================================
+       DESIGN SYSTEM & VARIABLES
+       ========================================== */
+    :root {
+      --bg-dark: #070913;
+      --bg-card: rgba(16, 20, 38, 0.55);
+      --bg-card-hover: rgba(22, 28, 54, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(0, 245, 212, 0.25);
+      
+      /* Glowing particle colors */
+      --color-proton: #ff2a7a;
+      --color-neutron: #00f5d4;
+      --color-electron: #fee440;
+      
+      --color-primary: #7b2cbf;
+      --color-secondary: #00b4d8;
+      --color-accent: #00f5d4;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      
+      --shadow-glow-proton: 0 0 15px rgba(255, 42, 122, 0.6);
+      --shadow-glow-neutron: 0 0 15px rgba(0, 245, 212, 0.6);
+      --shadow-glow-electron: 0 0 15px rgba(254, 228, 64, 0.8);
+      
+      --transition-speed: 0.3s;
+      --font-headings: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* ==========================================
+       GLOBAL RESET & LAYOUT
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(123, 44, 191, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.12) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    h1, h2, h3, h4, h5 {
+      font-family: var(--font-headings);
+      letter-spacing: -0.02em;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-secondary);
+    }
+
+    /* ==========================================
+       TYPOGRAPHY & ACCENTS
+       ========================================== */
+    .glow-text {
+      text-shadow: 0 0 15px rgba(0, 245, 212, 0.4);
+    }
+    .neon-border {
+      border: 1px solid var(--border-accent);
+      box-shadow: 0 0 15px rgba(0, 245, 212, 0.05);
+    }
+
+    /* ==========================================
+       NAVIGATION BAR
+       ========================================== */
+    header {
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      background: rgba(7, 9, 19, 0.75);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .logo-icon {
+      font-size: 1.8rem;
+      color: var(--color-accent);
+      animation: rotate-atom 8s linear infinite;
+    }
+
+    @keyframes rotate-atom {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .logo-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 30%, var(--color-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.8rem;
+    }
+
+    nav button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-headings);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    nav button:hover, nav button.active {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    nav button.active {
+      border: 1px solid rgba(0, 245, 212, 0.3);
+      background: rgba(0, 245, 212, 0.08);
+      box-shadow: 0 0 10px rgba(0, 245, 212, 0.1);
+    }
+
+    /* ==========================================
+       CONTAINERS & STRUCTURE
+       ========================================== */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .view-section {
+      display: none;
+      animation: fade-in 0.4s ease-out forwards;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================
+       GLASSMORPHIC CARDS
+       ========================================== */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.8rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: all var(--transition-speed) ease;
+    }
+
+    .glass-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    /* ==========================================
+       DASHBOARDS & LAYOUT GRIDS
+       ========================================== */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .grid-2 {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .indicator-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .indicator-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+    }
+
+    .indicator-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+    }
+
+    .indicator-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: var(--font-headings);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), #9d4edd);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.6rem;
+      border-radius: 10px;
+      font-family: var(--font-headings);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      box-shadow: 0 4px 15px rgba(123, 44, 191, 0.3);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(123, 44, 191, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: none;
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: none;
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, #00b4d8, #00f5d4);
+      color: #070913;
+      box-shadow: 0 4px 15px rgba(0, 245, 212, 0.25);
+    }
+
+    .btn-accent:hover {
+      box-shadow: 0 6px 20px rgba(0, 245, 212, 0.45);
+    }
+
+    /* ==========================================
+       SECTION 1: HOME & EXPLORER
+       ========================================== */
+    .hero-section {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 3rem 0;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 40%, var(--color-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+      line-height: 1.6;
+    }
+
+    .periodic-table-container {
+      margin-top: 3rem;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    .p-table {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(40px, 1fr));
+      gap: 6px;
+      overflow-x: auto;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+
+    .p-cell {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .p-cell:hover {
+      transform: scale(1.1);
+      z-index: 10;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+    }
+
+    .p-cell.empty {
+      border: none;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .p-cell.nonmetal { background: rgba(58, 12, 163, 0.35); border-color: rgba(58, 12, 163, 0.6); }
+    .p-cell.noble-gas { background: rgba(114, 9, 183, 0.4); border-color: rgba(114, 9, 183, 0.6); }
+    .p-cell.alkali-metal { background: rgba(247, 37, 133, 0.35); border-color: rgba(247, 37, 133, 0.6); }
+    .p-cell.alkaline-earth { background: rgba(72, 149, 239, 0.35); border-color: rgba(72, 149, 239, 0.6); }
+    .p-cell.metalloid { background: rgba(76, 201, 240, 0.35); border-color: rgba(76, 201, 240, 0.6); }
+    .p-cell.reactive-nonmetal { background: rgba(74, 4, 77, 0.35); border-color: rgba(74, 4, 77, 0.6); }
+
+    .p-cell-num { font-size: 0.6rem; color: var(--text-muted); }
+    .p-cell-symbol { font-weight: 800; font-size: 0.95rem; text-align: center; }
+    .p-cell-name { font-size: 0.5rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); }
+
+    /* ==========================================
+       SECTION 2: SANDBOX (BUILD AN ATOM)
+       ========================================== */
+    .sandbox-container {
+      background: var(--bg-card);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 1024px) {
+      .sandbox-container {
+        grid-template-columns: 1.4fr 1fr;
+      }
+    }
+
+    .canvas-container {
+      position: relative;
+      background: radial-gradient(circle at center, #101428 0%, #070913 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 480px;
+    }
+
+    #sandbox-canvas {
+      width: 100%;
+      height: 100%;
+      max-width: 550px;
+      max-height: 550px;
+    }
+
+    .sandbox-controls {
+      padding: 2rem;
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 0.9rem 1.2rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .particle-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .particle-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+
+    .p-dot-proton { background: var(--color-proton); box-shadow: var(--shadow-glow-proton); }
+    .p-dot-neutron { background: var(--color-neutron); box-shadow: var(--shadow-glow-neutron); }
+    .p-dot-electron { background: var(--color-electron); box-shadow: var(--shadow-glow-electron); }
+
+    .particle-count-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-circle:hover {
+      background: var(--color-accent);
+      color: #000;
+      border-color: var(--color-accent);
+    }
+
+    .btn-circle:active {
+      transform: scale(0.9);
+    }
+
+    .val-display {
+      font-size: 1.3rem;
+      font-weight: 700;
+      min-width: 25px;
+      text-align: center;
+    }
+
+    .stability-banner {
+      padding: 0.8rem;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: 700;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .stability-banner.stable {
+      background: rgba(0, 245, 212, 0.12);
+      border: 1px solid var(--color-neutron);
+      color: var(--color-neutron);
+    }
+
+    .stability-banner.unstable {
+      background: rgba(255, 42, 122, 0.12);
+      border: 1px solid var(--color-proton);
+      color: var(--color-proton);
+      animation: pulse-border 1.5s infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(255, 42, 122, 0.3); }
+      50% { border-color: rgba(255, 42, 122, 1); }
+    }
+
+    /* ==========================================
+       SECTION 3: ELECTRON CONFIGURATION CHALLENGE
+       ========================================== */
+    .shell-game-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .shell-game-container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .orbital-shell-builder {
+      position: relative;
+      background: radial-gradient(circle at center, #101428 0%, #070913 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      min-height: 480px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .shell-ring-btn {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: border 0.3s;
+    }
+
+    .shell-ring-btn:hover {
+      border: 1px solid var(--color-electron);
+      background: rgba(254, 228, 64, 0.02);
+    }
+
+    .shell-label-tag {
+      position: absolute;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       SECTION 4: TIMELINE (HISTORICAL MODELS)
+       ========================================== */
+    .timeline-navigation {
+      display: flex;
+      justify-content: space-between;
+      overflow-x: auto;
+      gap: 12px;
+      margin-bottom: 2rem;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .timeline-node {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.8rem 1.4rem;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      min-width: 140px;
+      transition: all 0.2s;
+    }
+
+    .timeline-node:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .timeline-node.active {
+      background: linear-gradient(135deg, rgba(123, 44, 191, 0.2), rgba(0, 180, 216, 0.2));
+      border-color: var(--color-accent);
+      box-shadow: 0 0 15px rgba(0, 245, 212, 0.1);
+    }
+
+    .timeline-node-year {
+      font-size: 0.8rem;
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .timeline-node-title {
+      font-family: var(--font-headings);
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    .history-sim-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 900px) {
+      .history-sim-grid {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+    }
+
+    .history-interactive-panel {
+      background: radial-gradient(circle at center, #101428 0%, #070913 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      height: 400px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ==========================================
+       SECTION 5: QUIZ & CERTIFICATES
+       ========================================== */
+    .quiz-card {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .quiz-progress {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    .quiz-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-secondary), var(--color-accent));
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .question-num {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .question-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .option-button {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 1.1rem 1.5rem;
+      border-radius: 12px;
+      text-align: left;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-button:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .option-button.correct {
+      background: rgba(0, 245, 212, 0.15);
+      border-color: var(--color-neutron);
+      color: var(--color-neutron);
+    }
+
+    .option-button.incorrect {
+      background: rgba(255, 42, 122, 0.15);
+      border-color: var(--color-proton);
+      color: var(--color-proton);
+    }
+
+    .option-button:disabled {
+      cursor: not-allowed;
+    }
+
+    .quiz-explanation {
+      background: rgba(0, 180, 216, 0.08);
+      border-left: 4px solid var(--color-secondary);
+      border-radius: 0 10px 10px 0;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .quiz-results-card {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .badge-icon {
+      font-size: 4rem;
+      color: var(--color-accent);
+      margin-bottom: 1rem;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Certificate Modal/Canvas styling */
+    .certificate-input-container {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .certificate-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.8rem 1.2rem;
+      color: white;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .certificate-input:focus {
+      border-color: var(--color-accent);
+    }
+
+    #certificate-preview-canvas {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin: 1.5rem 0;
+      background: #111;
+      display: none;
+    }
+
+    /* ==========================================
+       UTILITIES & MODALS
+       ========================================== */
+    .flex-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gap-1rem { gap: 1rem; }
+    .mt-1rem { margin-top: 1rem; }
+    .mt-2rem { margin-top: 2rem; }
+    .mb-1rem { margin-bottom: 1rem; }
+    .text-center { text-align: center; }
+
+    /* Info overlays */
+    .info-overlay {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(7, 9, 19, 0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       HEADER / NAVIGATION
+       ========================================== -->
+  <header>
+    <div class="logo-container" onclick="showView('home')">
+      <i class="fa-solid fa-atom logo-icon"></i>
+      <span class="logo-title">AtomCraft</span>
+    </div>
+    <nav>
+      <button class="nav-btn active" id="btn-home" onclick="showView('home')">
+        <i class="fa-solid fa-circle-nodes"></i><span>Explorer</span>
+      </button>
+      <button class="nav-btn" id="btn-sandbox" onclick="showView('sandbox')">
+        <i class="fa-solid fa-flask"></i><span>Build an Atom</span>
+      </button>
+      <button class="nav-btn" id="btn-shell" onclick="showView('shell')">
+        <i class="fa-solid fa-gamepad"></i><span>Shell Builder</span>
+      </button>
+      <button class="nav-btn" id="btn-history" onclick="showView('history')">
+        <i class="fa-solid fa-clock-rotate-left"></i><span>Time Machine</span>
+      </button>
+      <button class="nav-btn" id="btn-quiz" onclick="showView('quiz')">
+        <i class="fa-solid fa-award"></i><span>Quiz</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <main>
+
+    <!-- ==========================================
+         VIEW 1: HOME & EXPLORER
+         ========================================== -->
+    <section id="view-home" class="view-section active">
+      <div class="hero-section">
+        <h1 class="hero-title">Unlock the Secrets of the Atom</h1>
+        <p class="hero-subtitle">
+          Journey into the subatomic world. Build stable elements, shell configurations, experience landmark scattering and photon emission experiments, and claim your certified quantum rank.
+        </p>
+        <div class="flex-row" style="justify-content: center; gap: 1.5rem;">
+          <button class="btn btn-accent" onclick="showView('sandbox')">
+            <i class="fa-solid fa-play"></i> Start Building Atoms
+          </button>
+          <button class="btn btn-secondary" onclick="showView('history')">
+            Explore Quantum History
+          </button>
+        </div>
+      </div>
+
+      <!-- Core Info Deck -->
+      <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 3rem;">
+        <div class="glass-card">
+          <h3 style="margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-shield-halved" style="color: var(--color-proton);"></i> Protons
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Found inside the nucleus. Carrying a positive charge (+1e) and weighing ~1 amu, the number of protons defines the identity of the element.
+          </p>
+        </div>
+        <div class="glass-card">
+          <h3 style="margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-circle" style="color: var(--color-neutron);"></i> Neutrons
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Electrically neutral (0 charge) and weighing ~1 amu. Located in the nucleus, they provide structural spacing, shielding protons' repulsion forces.
+          </p>
+        </div>
+        <div class="glass-card">
+          <h3 style="margin-bottom: 0.8rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-bolt" style="color: var(--color-electron);"></i> Electrons
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6;">
+            Lightweight, negatively charged particles (-1e) orbiting in energy levels. They control chemical bonding and elements' reactivity.
+          </p>
+        </div>
+      </div>
+
+      <!-- Periodic Table Section -->
+      <div class="periodic-table-container">
+        <h2 class="section-title">Subatomic Element Library</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+          Select any element from the first three periods to view details, electron shell configuration, and interactive profiles.
+        </p>
+        
+        <div class="p-table" id="interactive-periodic-table">
+          <!-- Populated Dynamically via JS -->
+        </div>
+
+        <div class="glass-card mt-2rem" id="element-detail-card" style="display: none;">
+          <!-- Detail updates dynamically -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 2: SANDBOX (BUILD AN ATOM)
+         ========================================== -->
+    <section id="view-sandbox" class="view-section">
+      <h2 class="section-title">Atomic Sandbox</h2>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Add protons, neutrons, and electrons to create stable isotopes of elements from Period 1 to 3. Watch how mass, charge, and stability react instantly.
+      </p>
+
+      <div class="sandbox-container">
+        <div class="canvas-container">
+          <canvas id="sandbox-canvas"></canvas>
+          <div class="info-overlay">
+            <i class="fa-solid fa-info-circle"></i> Drag to spin the electron shells. Nucleus particles vibrate to reflect nuclear forces.
+          </div>
+        </div>
+
+        <div class="sandbox-controls">
+          <div>
+            <h3 class="glow-text" style="font-size: 1.8rem; margin-bottom: 0.5rem;" id="sb-element-name">Hydrogen-1</h3>
+            <p style="color: var(--text-muted); font-size: 0.95rem;" id="sb-element-desc">Simple protium hydrogen atom.</p>
+
+            <div class="stability-banner stable" id="sb-stability">
+              <i class="fa-solid fa-circle-check"></i> Stable Nucleus
+            </div>
+
+            <!-- Stats dashboard -->
+            <div class="dashboard-grid">
+              <div class="indicator-box">
+                <div class="indicator-label">Mass Number (A)</div>
+                <div class="indicator-value" id="sb-mass">1</div>
+              </div>
+              <div class="indicator-box">
+                <div class="indicator-label">Net Charge</div>
+                <div class="indicator-value" id="sb-charge">0</div>
+              </div>
+              <div class="indicator-box" style="grid-column: span 2;">
+                <div class="indicator-label">Isotope & Charge Class</div>
+                <div class="indicator-value" id="sb-class" style="font-size: 1.3rem; color: var(--color-secondary);">Neutral Atom</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Adding/Subtracting Panels -->
+          <div>
+            <div class="control-row">
+              <div class="particle-meta">
+                <div class="particle-dot p-dot-proton"></div>
+                <div>
+                  <div style="font-weight: 700;">Protons</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Atomic number (Z)</div>
+                </div>
+              </div>
+              <div class="particle-count-controls">
+                <button class="btn-circle" onclick="changeSandboxParticle('proton', -1)"><i class="fa-solid fa-minus"></i></button>
+                <div class="val-display" id="cnt-proton">1</div>
+                <button class="btn-circle" onclick="changeSandboxParticle('proton', 1)"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="particle-meta">
+                <div class="particle-dot p-dot-neutron"></div>
+                <div>
+                  <div style="font-weight: 700;">Neutrons</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Isotope mass stability</div>
+                </div>
+              </div>
+              <div class="particle-count-controls">
+                <button class="btn-circle" onclick="changeSandboxParticle('neutron', -1)"><i class="fa-solid fa-minus"></i></button>
+                <div class="val-display" id="cnt-neutron">0</div>
+                <button class="btn-circle" onclick="changeSandboxParticle('neutron', 1)"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="particle-meta">
+                <div class="particle-dot p-dot-electron"></div>
+                <div>
+                  <div style="font-weight: 700;">Electrons</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Chemical ionization</div>
+                </div>
+              </div>
+              <div class="particle-count-controls">
+                <button class="btn-circle" onclick="changeSandboxParticle('electron', -1)"><i class="fa-solid fa-minus"></i></button>
+                <div class="val-display" id="cnt-electron">1</div>
+                <button class="btn-circle" onclick="changeSandboxParticle('electron', 1)"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+
+            <div class="flex-row mt-1rem">
+              <button class="btn btn-secondary" style="flex: 1;" onclick="resetSandbox()">
+                <i class="fa-solid fa-arrows-rotate"></i> Reset
+              </button>
+              <button class="btn btn-accent" style="flex: 1;" onclick="loadTargetForSandbox(6, 6, 6)">
+                Build Carbon-12
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 3: ELECTRON CONFIGURATION CHALLENGE
+         ========================================== -->
+    <section id="view-shell" class="view-section">
+      <h2 class="section-title">Electron Configuration Challenge</h2>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Complete the electron configuration shells (K, L, M) for the target element to unlock stable octet fields.
+      </p>
+
+      <div class="shell-game-container">
+        <!-- Visual Orbit Canvas -->
+        <div class="orbital-shell-builder" id="shell-game-board">
+          <!-- Rendered dynamically as rings and electron slots -->
+        </div>
+
+        <!-- Task & UI details -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+              <span style="font-size: 0.9rem; text-transform: uppercase; color: var(--color-accent); font-weight: 700;">Challenge Active</span>
+              <span style="font-size: 0.9rem; color: var(--text-muted);" id="shell-score">Score: 0</span>
+            </div>
+
+            <h3 style="font-size: 2.2rem; margin-bottom: 0.5rem;" id="shell-target-element">Carbon</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;" id="shell-target-hint">Atomic Number 6. Place electrons to match this count.</p>
+
+            <div class="dashboard-grid" style="margin-bottom: 1.5rem;">
+              <div class="indicator-box">
+                <div class="indicator-label">Electrons Placed</div>
+                <div class="indicator-value" id="shell-current-count">0 / 6</div>
+              </div>
+              <div class="indicator-box">
+                <div class="indicator-label">Shell Formula</div>
+                <div class="indicator-value" id="shell-formula-label" style="font-size: 1.25rem; color: var(--color-electron);">2, 4</div>
+              </div>
+            </div>
+
+            <!-- Configuration string visualizer -->
+            <div style="background: rgba(255,255,255,0.02); padding: 1.2rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Orbital Notation</div>
+              <div style="font-family: var(--font-headings); font-size: 1.4rem; font-weight: 700; word-spacing: 5px;" id="shell-notation-string">
+                1s² 2s² 2p⁰
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom controls -->
+          <div>
+            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+              <button class="btn btn-secondary" style="flex: 1;" onclick="addElectronToGameShell()">
+                <i class="fa-solid fa-plus-circle"></i> Add Electron
+              </button>
+              <button class="btn btn-secondary" style="flex: 1;" onclick="removeElectronFromGameShell()">
+                <i class="fa-solid fa-minus-circle"></i> Remove Electron
+              </button>
+            </div>
+            
+            <button class="btn btn-accent" style="width: 100%;" id="btn-check-shell" onclick="checkShellConfiguration()">
+              Submit Configuration
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 4: TIMELINE (HISTORICAL MODELS)
+         ========================================== -->
+    <section id="view-history" class="view-section">
+      <h2 class="section-title">Atomic Time Machine</h2>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Navigate through historical timeline milestones. Play with interactive simulations that led to our modern understanding of quantum atomic shells.
+      </p>
+
+      <div class="timeline-navigation">
+        <div class="timeline-node active" id="node-dalton" onclick="switchHistoricalModel('dalton')">
+          <div class="timeline-node-year">1803</div>
+          <div class="timeline-node-title">Billiard Ball</div>
+        </div>
+        <div class="timeline-node" id="node-thomson" onclick="switchHistoricalModel('thomson')">
+          <div class="timeline-node-year">1904</div>
+          <div class="timeline-node-title">Plum Pudding</div>
+        </div>
+        <div class="timeline-node" id="node-rutherford" onclick="switchHistoricalModel('rutherford')">
+          <div class="timeline-node-year">1911</div>
+          <div class="timeline-node-title">Gold Foil</div>
+        </div>
+        <div class="timeline-node" id="node-bohr" onclick="switchHistoricalModel('bohr')">
+          <div class="timeline-node-year">1913</div>
+          <div class="timeline-node-title">Bohr Orbit</div>
+        </div>
+        <div class="timeline-node" id="node-schrodinger" onclick="switchHistoricalModel('schrodinger')">
+          <div class="timeline-node-year">1926</div>
+          <div class="timeline-node-title">Quantum Cloud</div>
+        </div>
+      </div>
+
+      <div class="history-sim-grid">
+        <!-- Interactive canvas container -->
+        <div class="history-interactive-panel">
+          <canvas id="history-canvas" style="width: 100%; height: 100%;"></canvas>
+          <div class="info-overlay" id="history-canvas-instruction">
+            Interact with the canvas!
+          </div>
+        </div>
+
+        <!-- Simulation explanations / controls -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 id="history-model-title" style="font-size: 1.8rem; margin-bottom: 0.5rem;">Dalton's Billiard Ball Model</h3>
+            <p style="font-size: 0.85rem; color: var(--color-accent); font-weight: 700; margin-bottom: 1rem;" id="history-model-scientist">John Dalton</p>
+            
+            <p id="history-model-desc" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem;">
+              Dalton conceptualized atoms as solid, indivisible spheres. He claimed that chemical reactions reorganize atoms, but atoms cannot be broken or created.
+            </p>
+
+            <div id="history-controls-container" style="background: rgba(255,255,255,0.02); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1.5rem;">
+              <!-- Interactive controls appended by JS -->
+            </div>
+          </div>
+
+          <div style="background: rgba(0, 180, 216, 0.05); border-radius: 10px; padding: 1rem; border: 1px solid rgba(0, 180, 216, 0.15);">
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--color-secondary); font-weight: 700; margin-bottom: 0.3rem;">Scientific Insight</div>
+            <p id="history-scientific-insight" style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted);">
+              While incorrect about atoms being solid and indivisible, Dalton's model laid the foundation for modern stoichiometric calculations and quantitative chemistry laws.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         VIEW 5: QUIZ & CERTIFICATES
+         ========================================== -->
+    <section id="view-quiz" class="view-section">
+      <!-- Welcome/Start Screen -->
+      <div id="quiz-start-screen" class="glass-card quiz-card text-center" style="padding: 3rem 2rem;">
+        <i class="fa-solid fa-graduation-cap badge-icon" style="font-size: 5rem;"></i>
+        <h2 style="font-size: 2.2rem; margin: 1rem 0;">Quantum Rank Certification Quiz</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+          Prove your mastery over the subatomic world. Answer 10 randomized chemistry questions about historical models, isotopes, stability, and shell structures to earn a downloadable diploma!
+        </p>
+        <button class="btn btn-accent" onclick="startQuiz()">
+          Start Certification Quiz
+        </button>
+      </div>
+
+      <!-- Quiz Execution card -->
+      <div id="quiz-game-screen" class="glass-card quiz-card" style="display: none;">
+        <div class="quiz-progress">
+          <div class="quiz-progress-bar" id="q-progress"></div>
+        </div>
+
+        <div class="question-header">
+          <span class="question-num" id="q-counter">Question 1 of 10</span>
+          <span style="font-size: 0.9rem; font-weight: 700; color: var(--color-electron);" id="q-score">Score: 0/0</span>
+        </div>
+
+        <div class="question-text" id="q-text">
+          What is the electric charge of a proton?
+        </div>
+
+        <div class="options-grid" id="q-options">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="quiz-explanation" id="q-explanation" style="display: none;">
+          <!-- Expalantion text -->
+        </div>
+
+        <button class="btn" style="width: 100%; display: none;" id="btn-next-question" onclick="nextQuestion()">
+          Next Question <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Quiz Complete/Results Screen -->
+      <div id="quiz-results-screen" class="glass-card quiz-results-card" style="display: none; padding: 3rem 2rem;">
+        <i class="fa-solid fa-award badge-icon" id="res-badge"></i>
+        <h2 style="font-size: 2.4rem; margin-bottom: 0.5rem;" id="res-heading">Congratulations!</h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1.5rem;" id="res-score-desc">You scored 9/10!</p>
+        <p style="line-height: 1.6; color: var(--text-muted); max-width: 450px; margin: 0 auto 2rem auto;" id="res-motivation">
+          You have demonstrated deep understanding of atomic properties, isotopes, and electron configurations! Enter your name below to claim your certificate.
+        </p>
+
+        <!-- Certificate Form -->
+        <div id="cert-form-box" style="display: none;">
+          <div class="certificate-input-container">
+            <label for="cert-student-name" style="font-weight: 700; font-size: 0.9rem; color: var(--color-accent);">ENTER YOUR NAME FOR THE CERTIFICATE</label>
+            <input type="text" id="cert-student-name" class="certificate-input" placeholder="Your Name" oninput="drawCertificate()">
+          </div>
+          
+          <canvas id="certificate-preview-canvas"></canvas>
+
+          <div class="flex-row" style="justify-content: center; gap: 1rem; margin-top: 1rem;">
+            <button class="btn btn-accent" onclick="downloadCertificate()">
+              <i class="fa-solid fa-download"></i> Download PNG Certificate
+            </button>
+            <button class="btn btn-secondary" onclick="printCertificate()">
+              <i class="fa-solid fa-print"></i> Print PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-2rem">
+          <button class="btn btn-secondary" onclick="retakeQuiz()">
+            <i class="fa-solid fa-arrows-rotate"></i> Retake Quiz (New Questions)
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================
+       JAVASCRIPT MODULES & LOGIC
+       ========================================== -->
+  <script>
+    /* ==========================================
+       SUBATOMIC DATABASE & DATA SETS
+       ========================================== */
+    const ELEMENTS_DATABASE = [
+      { z: 1, symbol: 'H', name: 'Hydrogen', group: 'reactive-nonmetal', mass: 1.008, shell: [1], desc: 'Lightest element, fuels the stars. Standard isotope contains no neutrons.', uses: 'Clean rocket fuel, ammonia synthesis.', stableIsotopes: [0, 1] },
+      { z: 2, symbol: 'He', name: 'Helium', group: 'noble-gas', mass: 4.003, shell: [2], desc: 'Extremely stable noble gas. First electron shell is full.', uses: 'Cooling superconducting magnets, inflating balloons.', stableIsotopes: [1, 2] },
+      { z: 3, symbol: 'Li', name: 'Lithium', group: 'alkali-metal', mass: 6.94, shell: [2, 1], desc: 'Highly reactive alkali metal with single outer valence electron.', uses: 'Rechargeable electric vehicle batteries, mood stabilizers.', stableIsotopes: [3, 4] },
+      { z: 4, symbol: 'Be', name: 'Beryllium', group: 'alkaline-earth', mass: 9.012, shell: [2, 2], desc: 'Strong, lightweight alkaline earth metal used in structural space components.', uses: 'James Webb Space Telescope mirrors, aerospace structures.', stableIsotopes: [5] },
+      { z: 5, symbol: 'B', name: 'Boron', group: 'metalloid', mass: 10.81, shell: [2, 3], desc: 'Versatile metalloid forming tough borosilicate glass and polymers.', uses: 'Pyrex glassware, bulletproof vests, agricultural nutrients.', stableIsotopes: [5, 6] },
+      { z: 6, symbol: 'C', name: 'Carbon', group: 'reactive-nonmetal', mass: 12.011, shell: [2, 4], desc: 'The chemical foundation for organic life. Capable of making 4 bonds.', uses: 'Diamond jewelry, carbon fiber, carbon dating (Carbon-14).', stableIsotopes: [6, 7] },
+      { z: 7, symbol: 'N', name: 'Nitrogen', group: 'reactive-nonmetal', mass: 14.007, shell: [2, 5], desc: 'Makes up 78% of Earth\'s atmosphere as inert diatomic gas ($N_2$).', uses: 'Liquid nitrogen freezing, fertilizer production.', stableIsotopes: [7, 8] },
+      { z: 8, symbol: 'O', name: 'Oxygen', group: 'reactive-nonmetal', mass: 15.999, shell: [2, 6], desc: 'Crucial element for cellular respiration and biological combustion.', uses: 'Life support, steel smelting, rocket oxidizer.', stableIsotopes: [8, 9, 10] },
+      { z: 9, symbol: 'F', name: 'Fluorine', group: 'reactive-nonmetal', mass: 18.998, shell: [2, 7], desc: 'Most electronegative and reactive element in the periodic table.', uses: 'Water fluoridation, Teflon non-stick coating, toothpaste.', stableIsotopes: [10] },
+      { z: 10, symbol: 'Ne', name: 'Neon', group: 'noble-gas', mass: 20.180, shell: [2, 8], desc: 'Inert noble gas that glows bright reddish-orange under electric discharges.', uses: 'Neon signage, high-voltage indicators.', stableIsotopes: [10, 11, 12] },
+      { z: 11, symbol: 'Na', name: 'Sodium', group: 'alkali-metal', mass: 22.990, shell: [2, 8, 1], desc: 'Highly reactive metal that burns vigorously in water, forming table salt when combined with chlorine.', uses: 'Table salt (NaCl), vapor street lamps, body electrolyte balance.', stableIsotopes: [12] },
+      { z: 12, symbol: 'Mg', name: 'Magnesium', group: 'alkaline-earth', mass: 24.305, shell: [2, 8, 2], desc: 'Essential mineral for living cells, burns with an intense, bright white flame.', uses: 'Lightweight alloys, structural frames, fireworks.', stableIsotopes: [12, 13, 14] },
+      { z: 13, symbol: 'Al', name: 'Aluminum', group: 'reactive-nonmetal', mass: 26.982, shell: [2, 8, 3], desc: 'Ductile post-transition metal. Resistive to oxidation due to a thin passivation layer.', uses: 'Soda cans, airplane construction, kitchen foils.', stableIsotopes: [14] },
+      { z: 14, symbol: 'Si', name: 'Silicon', group: 'metalloid', mass: 28.085, shell: [2, 8, 4], desc: 'The primary semiconductor that powers global modern computer microprocessors.', uses: 'Computer chips, solar panels, quartz glass.', stableIsotopes: [14, 15, 16] },
+      { z: 15, symbol: 'P', name: 'Phosphorus', group: 'reactive-nonmetal', mass: 30.974, shell: [2, 8, 5], desc: 'Highly reactive nonmetal. Key element in biological energy molecules (ATP) and cell membranes.', uses: 'Matches, organic fertilizer, detergents.', stableIsotopes: [16] },
+      { z: 16, symbol: 'S', name: 'Sulfur', group: 'reactive-nonmetal', mass: 32.06, shell: [2, 8, 6], desc: 'Bright yellow nonmetal naturally found near volcanoes. Crucial for protein folds.', uses: 'Sulfuric acid manufacturing, rubber vulcanization, gunpowder.', stableIsotopes: [16, 17, 18, 20] },
+      { z: 17, symbol: 'Cl', name: 'Chlorine', group: 'reactive-nonmetal', mass: 35.45, shell: [2, 8, 7], desc: 'Toxic, pale-green halogen gas. Extremely strong oxidant used for sanitation.', uses: 'Pool chlorination, bleach, table salt.', stableIsotopes: [18, 20] },
+      { z: 18, symbol: 'Ar', name: 'Argon', group: 'noble-gas', mass: 39.948, shell: [2, 8, 8], desc: 'Inert gas making up ~0.9% of the atmosphere. Perfect shield gas.', uses: 'Inert welding shields, dual-pane window insulation.', stableIsotopes: [20, 22] }
+    ];
+
+    // Periodic Table grid index placements
+    const TABLE_LAYOUT = [
+      { z: 1, row: 1, col: 1 },
+      { z: 2, row: 1, col: 18 },
+      { z: 3, row: 2, col: 1 },
+      { z: 4, row: 2, col: 2 },
+      { z: 5, row: 2, col: 13 },
+      { z: 6, row: 2, col: 14 },
+      { z: 7, row: 2, col: 15 },
+      { z: 8, row: 2, col: 16 },
+      { z: 9, row: 2, col: 17 },
+      { z: 10, row: 2, col: 18 },
+      { z: 11, row: 3, col: 1 },
+      { z: 12, row: 3, col: 2 },
+      { z: 13, row: 3, col: 13 },
+      { z: 14, row: 3, col: 14 },
+      { z: 15, row: 3, col: 15 },
+      { z: 16, row: 3, col: 16 },
+      { z: 17, row: 3, col: 17 },
+      { z: 18, row: 3, col: 18 }
+    ];
+
+    // Quiz Question Bank (30 items)
+    const QUIZ_QUESTION_BANK = [
+      { q: "What particle carries a negative electric charge?", a: ["Electron", "Proton", "Neutron", "Positron"], c: 0, e: "Electrons have a charge of -1e and orbit the atomic nucleus." },
+      { q: "Which subatomic particle is not found in the nucleus of a standard Hydrogen-1 (Protium) atom?", a: ["Proton", "Neutron", "Electron", "Meson"], c: 1, e: "Hydrogen-1 contains only 1 proton in its nucleus and 1 electron orbiting. It has 0 neutrons." },
+      { q: "What is the maximum number of electrons that can occupy the first electron shell (K shell)?", a: ["2", "8", "18", "32"], c: 0, e: "The innermost energy level (n=1) has a single s subshell which holds up to 2 electrons ($2n^2 = 2(1)^2 = 2$)." },
+      { q: "Who discovered the electron using the cathode ray tube experiment?", a: ["John Dalton", "Ernest Rutherford", "J.J. Thomson", "Niels Bohr"], c: 2, e: "J.J. Thomson demonstrated that cathode rays are streams of negatively charged particles, later named electrons." },
+      { q: "In Rutherford's Gold Foil experiment, why did a tiny fraction of alpha particles deflect backward?", a: ["They collided with electrons", "They passed through empty cloud space", "They hit or repelled off a dense, positively charged nucleus", "They were absorbed by gold isotopes"], c: 2, e: "The large angles of deflection proved that most of the atom's mass and positive charge is concentrated in a tiny central nucleus." },
+      { q: "What is the mass number of an atom?", a: ["Protons + Electrons", "Protons + Neutrons", "Neutrons + Electrons", "Total Atomic volume in amu"], c: 1, e: "Mass number (A) represents the total number of protons and neutrons in the nucleus. Electrons are too light to contribute significantly." },
+      { q: "An atom has 11 protons and 10 electrons. What is its charge?", a: ["0 (Neutral)", "+1 (Cation)", "-1 (Anion)", "+11 (Unstable)"], c: 1, e: "With 11 positive charges and 10 negative charges, the net charge is +1, making it a Sodium cation ($Na^+$)." },
+      { q: "Isotopes of the same element must have the same number of:", a: ["Neutrons", "Protons", "Electrons in valence shell only", "Total nuclear shells"], c: 1, e: "An element is defined by its atomic number (protons). Isotopes share proton count but differ in neutrons." },
+      { q: "Which electron shell corresponds to principal quantum number n = 2?", a: ["K Shell", "L Shell", "M Shell", "N Shell"], c: 1, e: "The principal quantum numbers n=1, 2, 3, 4 map directly to shells labeled K, L, M, N." },
+      { q: "A single s orbital can hold a maximum of how many electrons?", a: ["2", "6", "10", "14"], c: 0, e: "An s orbital has spherical shape and, regardless of shell level, holds a maximum of 2 spin-paired electrons." },
+      { q: "Which model of the atom is commonly referred to as the 'Plum Pudding' model?", a: ["Dalton's billiard ball", "Thomson's chocolate chip pudding", "Bohr's planetary system", "Schrödinger's cloud model"], c: 1, e: "Thomson imagined electrons as small negative charges embedded inside a uniform sphere of positive charge, like plums in pudding." },
+      { q: "What key modification did Niels Bohr make to Rutherford's planetary model?", a: ["Introduced neutrons in the core", "Quantized electron orbits/energy levels", "Described orbitals as complex clouds", "Claimed the atom was indivisible"], c: 1, e: "Bohr proposed that electrons orbit the nucleus only in discrete orbits with fixed energies, preventing collapse." },
+      { q: "Which rule explains why we fill the K shell before the L shell?", a: ["Hund's Rule", "Pauli Exclusion Principle", "Aufbau Principle", "Octet Stability Law"], c: 2, e: "The Aufbau principle states that electrons fill lower-energy subshells first before moving to higher ones." },
+      { q: "What happens when an electron jumps from a higher energy orbit to a lower energy orbit in a Bohr atom?", a: ["It absorbs a neutron", "It absorbs a photon of light", "It emits a photon of light", "It gains mass"], c: 2, e: "Energy is conserved: the difference in orbital energy levels is released as a electromagnetic photon of light." },
+      { q: "If an atom has 8 protons, 8 neutrons, and 10 electrons, what is it?", a: ["Neutral Carbon", "Oxygen Anion (-2)", "Oxygen Cation (+2)", "Fluorine Isotope"], c: 1, e: "8 protons defines Oxygen. 10 electrons means it has a charge of $8 - 10 = -2$ (an anion)." },
+      { q: "How many orbitals are there in a single p subshell?", a: ["1", "3", "5", "7"], c: 1, e: "A p subshell has 3 degenerate orbitals ($p_x, p_y, p_z$), each holding 2 electrons, for a total subshell capacity of 6." },
+      { q: "What is the ground-state electron configuration of Carbon (Z = 6)?", a: ["1s² 2s⁴", "1s² 2s² 2p²", "1s² 2s² 2p⁴", "1s² 2s¹ 2p³"], c: 1, e: "Carbon has 6 electrons. Filling order: 1s (2), 2s (2), 2p (2)." },
+      { q: "Which particle is neutral and has a mass of approximately 1 atomic mass unit (amu)?", a: ["Proton", "Neutron", "Electron", "Neutrino"], c: 1, e: "Neutrons carry no electric charge and have a rest mass of $1.675 \times 10^{-27}$ kg (~1.008 amu)." },
+      { q: "Which fundamental force binds protons and neutrons together in the atomic nucleus?", a: ["Gravity", "Electromagnetic force", "Strong nuclear force", "Weak nuclear force"], c: 2, e: "The strong force overcomes the electrostatic repulsion of positively charged protons at extremely short nuclear distances." },
+      { q: "Who proposed that electrons exhibit both wave-like and particle-like properties?", a: ["John Dalton", "Louis de Broglie", "Ernest Rutherford", "Niels Bohr"], c: 1, e: "Louis de Broglie proposed wave-particle duality, showing that matter can have wave properties, foundational for quantum mechanics." },
+      { q: "What is the atomic number of Oxygen?", a: ["6", "8", "16", "10"], c: 1, e: "Oxygen (O) is the 8th element, meaning it contains 8 protons in its nucleus." },
+      { q: "The 3d subshell can hold a maximum of how many electrons?", a: ["2", "6", "10", "14"], c: 2, e: "A d subshell contains 5 orbitals, holding up to $5 \times 2 = 10$ electrons." },
+      { q: "The stability rule where representative elements tend to seek 8 valence electrons is the:", a: ["Octet Rule", "Heisenberg Range", "Aufbau Threshold", "De Broglie Constant"], c: 0, e: "The octet rule reflects elements' tendency to adopt the highly stable electron configuration of noble gases." },
+      { q: "Which subatomic particle defines the identity of a chemical element?", a: ["Neutron", "Proton", "Electron", "Positron"], c: 1, e: "Only the proton count determines the atomic number. Changing protons changes the element." },
+      { q: "What did Rutherford fire at the thin gold foil in his scattering experiment?", a: ["Electrons", "Gamma Ray photons", "Alpha particles", "Neutrons"], c: 2, e: "Rutherford used helium nuclei ($He^{2+}$), known as alpha particles, emitted from a radioactive source." },
+      { q: "Which quantum number describes the spatial orientation of an orbital?", a: ["Principal (n)", "Azimuthal (l)", "Magnetic (ml)", "Spin (ms)"], c: 2, e: "The magnetic quantum number ($m_l$) ranges from $-l$ to $+l$ and dictates orbital orientation." },
+      { q: "Which quantum number describes the spin direction of an electron?", a: ["Principal (n)", "Azimuthal (l)", "Magnetic (ml)", "Spin (ms)"], c: 3, e: "The spin quantum number ($m_s$) can be either +1/2 (spin up) or -1/2 (spin down)." },
+      { q: "What is an atom called that has gained electrons and has a net negative charge?", a: ["Isotope", "Cation", "Anion", "Nucleus"], c: 2, e: "Negatively charged ions are called anions; positively charged ions are called cations." },
+      { q: "The isotope Deuterium contains how many neutrons?", a: ["0", "1", "2", "3"], c: 1, e: "Deuterium ($^2H$) contains 1 proton and 1 neutron, giving it a mass number of 2." },
+      { q: "What is the ground-state electron configuration of Sodium (Z = 11)?", a: ["1s² 2s² 2p⁶ 3s¹", "1s² 2s² 2p⁷", "1s² 2s² 2p⁶ 3s²", "1s² 2s² 2p⁵ 3s²"], c: 0, e: "Sodium has 11 electrons. Configured: 1s² 2s² 2p⁶ 3s¹ (also represented as [Ne] 3s¹)." }
+    ];
+
+    /* ==========================================
+       GLOBAL STATE & ROUTING
+       ========================================== */
+    let currentView = 'home';
+    
+    function showView(viewId) {
+      document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      const activeSection = document.getElementById(`view-${viewId}`);
+      if (activeSection) {
+        activeSection.classList.add('active');
+      }
+
+      const activeBtn = document.getElementById(`btn-${viewId}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+      }
+
+      currentView = viewId;
+
+      // Handle custom section initializations
+      if (viewId === 'sandbox') {
+        initSandboxCanvas();
+      } else if (viewId === 'shell') {
+        initShellGame();
+      } else if (viewId === 'history') {
+        initHistoryCanvas();
+      }
+    }
+
+    /* ==========================================
+       TAB 1: DYNAMIC PERIODIC TABLE & EXPLORER
+       ========================================== */
+    function renderPeriodicTable() {
+      const container = document.getElementById('interactive-periodic-table');
+      container.innerHTML = '';
+
+      for (let r = 1; r <= 3; r++) {
+        for (let c = 1; c <= 18; c++) {
+          const placement = TABLE_LAYOUT.find(item => item.row === r && item.col === c);
+          if (placement) {
+            const dbElement = ELEMENTS_DATABASE.find(el => el.z === placement.z);
+            const cell = document.createElement('div');
+            cell.className = `p-cell ${dbElement.group}`;
+            cell.innerHTML = `
+              <div class="p-cell-num">${dbElement.z}</div>
+              <div class="p-cell-symbol">${dbElement.symbol}</div>
+              <div class="p-cell-name">${dbElement.name}</div>
+            `;
+            cell.onclick = () => selectElementForDetail(dbElement);
+            container.appendChild(cell);
+          } else {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'p-cell empty';
+            container.appendChild(emptyCell);
+          }
+        }
+      }
+    }
+
+    function selectElementForDetail(element) {
+      const card = document.getElementById('element-detail-card');
+      card.style.display = 'block';
+
+      card.innerHTML = `
+        <div style="display: flex; flex-direction: column; md-flex-direction: row; justify-content: space-between; gap: 1.5rem;">
+          <div>
+            <div class="flex-row" style="gap: 12px; margin-bottom: 0.5rem;">
+              <span style="font-size: 2.2rem; font-weight: 800; font-family: var(--font-headings); line-height: 1;" class="glow-text">
+                ${element.name} (${element.symbol})
+              </span>
+              <span class="indicator-label" style="background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 4px; font-weight: 600;">
+                Z = ${element.z}
+              </span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 1rem; line-height: 1.6; margin-bottom: 1.2rem;">
+              ${element.desc}
+            </p>
+            <div style="font-size: 0.9rem; margin-bottom: 1rem;">
+              <strong>Key Uses:</strong> <span style="color: var(--color-secondary);">${element.uses}</span>
+            </div>
+            
+            <div class="flex-row mt-1rem">
+              <button class="btn btn-accent" onclick="loadTargetForSandbox(${element.z}, ${element.stableIsotopes[0] || element.z}, ${element.z})">
+                <i class="fa-solid fa-flask"></i> Build in Sandbox
+              </button>
+              <button class="btn btn-secondary" onclick="loadTargetForShellGame(${element.z})">
+                <i class="fa-solid fa-gamepad"></i> Load Shell Challenge
+              </button>
+            </div>
+          </div>
+
+          <div style="min-width: 250px; background: rgba(0,0,0,0.2); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04);">
+            <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">Shell Configuration</h4>
+            <div style="font-size: 2.5rem; font-weight: 700; font-family: var(--font-headings); color: var(--color-electron); margin-bottom: 0.8rem;">
+              ${element.shell.join(' , ')}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              <strong>Standard Atomic Mass:</strong> ${element.mass} amu<br>
+              <strong>Electron configuration notation:</strong><br>
+              <code style="color: var(--color-secondary); font-size: 0.9rem; background: rgba(255,255,255,0.02); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">
+                ${getNotation(element.z)}
+              </code>
+            </div>
+          </div>
+        </div>
+      `;
+
+      card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getNotation(z) {
+      // Return ground state shell configurations for 1-18 elements
+      const orbits = [
+        { name: '1s', limit: 2 },
+        { name: '2s', limit: 2 },
+        { name: '2p', limit: 6 },
+        { name: '3s', limit: 2 },
+        { name: '3p', limit: 6 }
+      ];
+      let left = z;
+      let out = [];
+      for (let o of orbits) {
+        if (left <= 0) break;
+        let fill = Math.min(left, o.limit);
+        out.push(`${o.name}<sup>${fill}</sup>`);
+        left -= fill;
+      }
+      return out.join(' ');
+    }
+
+
+    /* ==========================================
+       TAB 2: INTERACTIVE SANDBOX (BUILD AN ATOM)
+       ========================================== */
+    let sbProtons = 1;
+    let sbNeutrons = 0;
+    let sbElectrons = 1;
+
+    let sbCanvas, sbCtx;
+    let sbAnimationId;
+    let sbRotationAngle = 0;
+    let isDraggingSandbox = false;
+    let dragStartX = 0;
+
+    function initSandboxCanvas() {
+      sbCanvas = document.getElementById('sandbox-canvas');
+      sbCtx = sbCanvas.getContext('2d');
+
+      // Adjust high-dpi screen ratios
+      const rect = sbCanvas.parentElement.getBoundingClientRect();
+      const size = Math.min(rect.width || 500, 500);
+      sbCanvas.width = size * window.devicePixelRatio;
+      sbCanvas.height = size * window.devicePixelRatio;
+      sbCanvas.style.width = `${size}px`;
+      sbCanvas.style.height = `${size}px`;
+      sbCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      // Drag event listeners to spin electron shells
+      sbCanvas.addEventListener('mousedown', (e) => {
+        isDraggingSandbox = true;
+        dragStartX = e.clientX;
+      });
+      window.addEventListener('mouseup', () => {
+        isDraggingSandbox = false;
+      });
+      sbCanvas.addEventListener('mousemove', (e) => {
+        if (isDraggingSandbox) {
+          const deltaX = e.clientX - dragStartX;
+          sbRotationAngle += deltaX * 0.01;
+          dragStartX = e.clientX;
+        }
+      });
+
+      // Mobile touch events
+      sbCanvas.addEventListener('touchstart', (e) => {
+        isDraggingSandbox = true;
+        dragStartX = e.touches[0].clientX;
+      });
+      window.addEventListener('touchend', () => {
+        isDraggingSandbox = false;
+      });
+      sbCanvas.addEventListener('touchmove', (e) => {
+        if (isDraggingSandbox) {
+          const deltaX = e.touches[0].clientX - dragStartX;
+          sbRotationAngle += deltaX * 0.01;
+          dragStartX = e.touches[0].clientX;
+        }
+      });
+
+      if (sbAnimationId) cancelAnimationFrame(sbAnimationId);
+      renderSandboxFrame();
+      updateSandboxDashboard();
+    }
+
+    function changeSandboxParticle(type, delta) {
+      if (type === 'proton') {
+        sbProtons = Math.max(0, Math.min(18, sbProtons + delta));
+        document.getElementById('cnt-proton').innerText = sbProtons;
+      } else if (type === 'neutron') {
+        sbNeutrons = Math.max(0, Math.min(22, sbNeutrons + delta));
+        document.getElementById('cnt-neutron').innerText = sbNeutrons;
+      } else if (type === 'electron') {
+        sbElectrons = Math.max(0, Math.min(18, sbElectrons + delta));
+        document.getElementById('cnt-electron').innerText = sbElectrons;
+      }
+      updateSandboxDashboard();
+    }
+
+    function resetSandbox() {
+      sbProtons = 1;
+      sbNeutrons = 0;
+      sbElectrons = 1;
+      document.getElementById('cnt-proton').innerText = sbProtons;
+      document.getElementById('cnt-neutron').innerText = sbNeutrons;
+      document.getElementById('cnt-electron').innerText = sbElectrons;
+      updateSandboxDashboard();
+    }
+
+    function loadTargetForSandbox(p, n, e) {
+      sbProtons = p;
+      sbNeutrons = n;
+      sbElectrons = e;
+      document.getElementById('cnt-proton').innerText = sbProtons;
+      document.getElementById('cnt-neutron').innerText = sbNeutrons;
+      document.getElementById('cnt-electron').innerText = sbElectrons;
+      showView('sandbox');
+      setTimeout(updateSandboxDashboard, 100);
+    }
+
+    function updateSandboxDashboard() {
+      const dbElement = ELEMENTS_DATABASE.find(el => el.z === sbProtons);
+
+      const nameEl = document.getElementById('sb-element-name');
+      const descEl = document.getElementById('sb-element-desc');
+      const massEl = document.getElementById('sb-mass');
+      const chargeEl = document.getElementById('sb-charge');
+      const classEl = document.getElementById('sb-class');
+      const stabilityBanner = document.getElementById('sb-stability');
+
+      const mass = sbProtons + sbNeutrons;
+      const charge = sbProtons - sbElectrons;
+
+      massEl.innerText = mass;
+      
+      let chargeSign = charge > 0 ? `+${charge}` : charge;
+      chargeEl.innerText = chargeSign;
+
+      if (sbProtons === 0) {
+        nameEl.innerText = "Empty Space";
+        descEl.innerText = "No protons. A collection of loose subatomic particles.";
+        classEl.innerText = "No Element";
+        stabilityBanner.className = "stability-banner unstable";
+        stabilityBanner.innerHTML = `<i class="fa-solid fa-circle-question"></i> Unbound Particles`;
+        return;
+      }
+
+      // Element identification
+      let baseName = dbElement ? dbElement.name : `Unknown Element (Z=${sbProtons})`;
+      nameEl.innerText = `${baseName}-${mass}`;
+      descEl.innerText = dbElement ? dbElement.desc : "Heavy synthetic nucleus.";
+
+      // Charge classification
+      if (charge === 0) {
+        classEl.innerText = "Neutral Atom";
+        classEl.style.color = "var(--color-neutron)";
+      } else if (charge > 0) {
+        classEl.innerText = `Positive Ion (Cation ${chargeSign})`;
+        classEl.style.color = "var(--color-proton)";
+      } else {
+        classEl.innerText = `Negative Ion (Anion ${chargeSign})`;
+        classEl.style.color = "var(--color-electron)";
+      }
+
+      // Stability Calculation
+      let isStable = false;
+      if (dbElement) {
+        isStable = dbElement.stableIsotopes.includes(sbNeutrons);
+      }
+      
+      if (isStable) {
+        stabilityBanner.className = "stability-banner stable";
+        stabilityBanner.innerHTML = `<i class="fa-solid fa-circle-check"></i> Stable Nucleus`;
+      } else {
+        stabilityBanner.className = "stability-banner unstable";
+        stabilityBanner.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Unstable Nucleus (Radioactive)`;
+      }
+    }
+
+    function renderSandboxFrame() {
+      if (currentView !== 'sandbox' || !sbCanvas) {
+        return;
+      }
+
+      const w = sbCanvas.width / window.devicePixelRatio;
+      const h = sbCanvas.height / window.devicePixelRatio;
+      const center = { x: w / 2, y: h / 2 };
+
+      sbCtx.clearRect(0, 0, w, h);
+
+      // Draw Orbit shell guides
+      const shellCount = sbElectrons > 10 ? 3 : (sbElectrons > 2 ? 2 : (sbElectrons > 0 ? 1 : 0));
+      const radii = [65, 110, 155];
+
+      sbRotationAngle += 0.005; // auto rotation
+
+      for (let i = 0; i < shellCount; i++) {
+        sbCtx.beginPath();
+        sbCtx.arc(center.x, center.y, radii[i], 0, Math.PI * 2);
+        sbCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        sbCtx.lineWidth = 1.5;
+        sbCtx.setLineDash([6, 6]);
+        sbCtx.stroke();
+        sbCtx.setLineDash([]);
+      }
+
+      // Draw Nucleus (Protons & Neutrons clustered together)
+      const nucleusParticles = [];
+      for (let p = 0; p < sbProtons; p++) nucleusParticles.push({ type: 'proton', color: varColorValue('--color-proton') });
+      for (let n = 0; n < sbNeutrons; n++) nucleusParticles.push({ type: 'neutron', color: varColorValue('--color-neutron') });
+      
+      // Shuffle to mix proton-neutron visuals
+      if (!window.nucleusSeed) {
+        window.nucleusSeed = [];
+        for (let i = 0; i < 100; i++) window.nucleusSeed.push(Math.random());
+      }
+
+      // Force particles into a clustered circle
+      const nucleusRadius = 8 + Math.sqrt(sbProtons + sbNeutrons) * 5.5;
+      
+      // Dynamic vibration if radioactive
+      const dbElement = ELEMENTS_DATABASE.find(el => el.z === sbProtons);
+      const isStable = dbElement ? dbElement.stableIsotopes.includes(sbNeutrons) : false;
+      const jitterAmplitude = (!isStable && sbProtons > 0) ? 1.8 : 0.3;
+
+      nucleusParticles.forEach((particle, idx) => {
+        let rSeed = window.nucleusSeed[idx % 100];
+        let angle = rSeed * Math.PI * 2;
+        let dist = Math.sqrt(rSeed) * (nucleusRadius - 5);
+        
+        let jitterX = (Math.random() - 0.5) * jitterAmplitude;
+        let jitterY = (Math.random() - 0.5) * jitterAmplitude;
+
+        let px = center.x + Math.cos(angle) * dist + jitterX;
+        let py = center.y + Math.sin(angle) * dist + jitterY;
+
+        sbCtx.beginPath();
+        sbCtx.arc(px, py, 6, 0, Math.PI * 2);
+        sbCtx.fillStyle = particle.color;
+        
+        // Add glows to protons
+        if (particle.type === 'proton') {
+          sbCtx.shadowColor = particle.color;
+          sbCtx.shadowBlur = 6;
+        }
+
+        sbCtx.fill();
+        sbCtx.shadowBlur = 0; // reset
+        
+        // Specular highlight highlight
+        sbCtx.beginPath();
+        sbCtx.arc(px - 2, py - 2, 2, 0, Math.PI * 2);
+        sbCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        sbCtx.fill();
+      });
+
+      // Draw Orbiting Electrons (Bohr orbits)
+      let electronsLeft = sbElectrons;
+      const shellCapacities = [2, 8, 8];
+      
+      for (let sIdx = 0; sIdx < shellCount; sIdx++) {
+        let fill = Math.min(electronsLeft, shellCapacities[sIdx]);
+        electronsLeft -= fill;
+        
+        let radius = radii[sIdx];
+
+        for (let eIdx = 0; eIdx < fill; eIdx++) {
+          let baseAngle = (eIdx / fill) * Math.PI * 2;
+          let activeAngle = baseAngle + (sIdx % 2 === 0 ? sbRotationAngle : -sbRotationAngle);
+          
+          let ex = center.x + Math.cos(activeAngle) * radius;
+          let ey = center.y + Math.sin(activeAngle) * radius;
+
+          // Draw electron particle
+          sbCtx.beginPath();
+          sbCtx.arc(ex, ey, 4.5, 0, Math.PI * 2);
+          sbCtx.fillStyle = varColorValue('--color-electron');
+          sbCtx.shadowColor = varColorValue('--color-electron');
+          sbCtx.shadowBlur = 8;
+          sbCtx.fill();
+          sbCtx.shadowBlur = 0;
+
+          // Specular
+          sbCtx.beginPath();
+          sbCtx.arc(ex - 1.5, ey - 1.5, 1.5, 0, Math.PI * 2);
+          sbCtx.fillStyle = 'white';
+          sbCtx.fill();
+        }
+      }
+
+      sbAnimationId = requestAnimationFrame(renderSandboxFrame);
+    }
+
+    const COLOR_FALLBACKS = {
+      '--color-proton': '#ff2a7a',
+      '--color-neutron': '#00f5d4',
+      '--color-electron': '#fee440'
+    };
+
+    function varColorValue(varName) {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return val || COLOR_FALLBACKS[varName] || '#ffffff';
+    }
+
+
+    /* ==========================================
+       TAB 3: ELECTRON CONFIGURATION CHALLENGE
+       ========================================== */
+    let shellTargetId = 6; // default Carbon
+    let shellScore = 0;
+    let shellElectronsCount = 0;
+    let shellRings = [0, 0, 0]; // K, L, M electron counts
+    
+    function initShellGame() {
+      loadTargetElementForShellGame();
+    }
+
+    function loadTargetElementForShellGame() {
+      const el = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      document.getElementById('shell-target-element').innerText = el.name;
+      document.getElementById('shell-target-hint').innerText = `Atomic Number ${el.z} (${el.symbol}). Correctly position all electrons in their Bohr shells.`;
+      
+      shellElectronsCount = 0;
+      shellRings = [0, 0, 0];
+      
+      updateShellGameBoard();
+    }
+
+    function loadTargetForShellGame(z) {
+      shellTargetId = z;
+      showView('shell');
+      setTimeout(loadTargetElementForShellGame, 100);
+    }
+
+    function updateShellGameBoard() {
+      const board = document.getElementById('shell-game-board');
+      board.innerHTML = '';
+
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      const totalRings = targetEl.shell.length;
+      
+      // Update UI panels
+      document.getElementById('shell-current-count').innerText = `${shellElectronsCount} / ${targetEl.z}`;
+      
+      // Calculate notation
+      let notation = generateActiveNotation(shellRings);
+      document.getElementById('shell-notation-string').innerHTML = notation;
+
+      // Calculate configuration representation
+      document.getElementById('shell-formula-label').innerText = shellRings.filter((v,i) => i < totalRings).join(', ');
+
+      const centerRadius = 50;
+      const ringRadii = [80, 130, 180];
+      const shellLabels = ['K', 'L', 'M'];
+
+      // Render Nucleus Center
+      const core = document.createElement('div');
+      core.style.position = 'absolute';
+      core.style.width = '70px';
+      core.style.height = '70px';
+      core.style.borderRadius = '50%';
+      core.style.background = 'radial-gradient(circle, var(--color-proton) 0%, var(--color-primary) 100%)';
+      core.style.display = 'flex';
+      core.style.flexDirection = 'column';
+      core.style.justifyContent = 'center';
+      core.style.alignItems = 'center';
+      core.style.boxShadow = '0 0 25px rgba(255, 42, 122, 0.4)';
+      core.innerHTML = `
+        <span style="font-weight:800; font-size:1.1rem;">${targetEl.symbol}</span>
+        <span style="font-size:0.65rem; opacity:0.8;">+${targetEl.z}</span>
+      `;
+      board.appendChild(core);
+
+      // Render Shell Rings and active electron dots
+      for (let rIdx = 0; rIdx < totalRings; rIdx++) {
+        const radius = ringRadii[rIdx];
+        const ring = document.createElement('div');
+        ring.className = 'shell-ring-btn';
+        ring.style.width = `${radius * 2}px`;
+        ring.style.height = `${radius * 2}px`;
+        board.appendChild(ring);
+
+        // Add shell name tag
+        const tag = document.createElement('div');
+        tag.className = 'shell-label-tag';
+        tag.style.top = `${240 - radius - 10}px`;
+        tag.innerText = `Shell ${shellLabels[rIdx]}`;
+        board.appendChild(tag);
+
+        // Render electrons assigned to this ring
+        let count = shellRings[rIdx];
+        for (let e = 0; e < count; e++) {
+          let angle = (e / count) * Math.PI * 2;
+          let dot = document.createElement('div');
+          dot.style.position = 'absolute';
+          dot.style.width = '12px';
+          dot.style.height = '12px';
+          dot.style.borderRadius = '50%';
+          dot.style.background = 'var(--color-electron)';
+          dot.style.boxShadow = 'var(--shadow-glow-electron)';
+          
+          let dx = radius * Math.cos(angle);
+          let dy = radius * Math.sin(angle);
+          dot.style.transform = `translate(${dx}px, ${dy}px)`;
+          ring.appendChild(dot);
+        }
+      }
+    }
+
+    function addElectronToGameShell() {
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      if (shellElectronsCount >= targetEl.z) return;
+
+      // Assign to first shell that is not full
+      const caps = [2, 8, 8];
+      for (let i = 0; i < targetEl.shell.length; i++) {
+        if (shellRings[i] < caps[i]) {
+          shellRings[i]++;
+          shellElectronsCount++;
+          break;
+        }
+      }
+      updateShellGameBoard();
+    }
+
+    function removeElectronFromGameShell() {
+      if (shellElectronsCount <= 0) return;
+
+      // Subtract from outermost active shell
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      for (let i = targetEl.shell.length - 1; i >= 0; i--) {
+        if (shellRings[i] > 0) {
+          shellRings[i]--;
+          shellElectronsCount--;
+          break;
+        }
+      }
+      updateShellGameBoard();
+    }
+
+    function generateActiveNotation(rings) {
+      let leftK = rings[0];
+      let leftL = rings[1];
+      let leftM = rings[2];
+
+      let build = [];
+      // 1s
+      let f1s = Math.min(leftK, 2);
+      build.push(`1s<sup>${f1s}</sup>`);
+
+      // 2s
+      let f2s = Math.min(leftL, 2);
+      build.push(`2s<sup>${f2s}</sup>`);
+      leftL -= f2s;
+
+      // 2p
+      let f2p = Math.min(leftL, 6);
+      build.push(`2p<sup>${f2p}</sup>`);
+
+      // 3s
+      let f3s = Math.min(leftM, 2);
+      build.push(`3s<sup>${f3s}</sup>`);
+      leftM -= f3s;
+
+      // 3p
+      let f3p = Math.min(leftM, 6);
+      build.push(`3p<sup>${f3p}</sup>`);
+
+      return build.join(' ');
+    }
+
+    function checkShellConfiguration() {
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      
+      let correct = true;
+      for (let i = 0; i < targetEl.shell.length; i++) {
+        if (shellRings[i] !== targetEl.shell[i]) {
+          correct = false;
+        }
+      }
+
+      if (correct) {
+        shellScore += 10;
+        document.getElementById('shell-score').innerText = `Score: ${shellScore}`;
+        
+        // Show celebratory alert
+        alert(`Correct! You successfully constructed the configuration of ${targetEl.name}!`);
+        
+        // Load next element
+        let nextZ = shellTargetId + 1;
+        if (nextZ > 18) nextZ = 1;
+        shellTargetId = nextZ;
+        loadTargetElementForShellGame();
+      } else {
+        alert("Configuration is incorrect. Review shell capacity limits (K=2, L=8, M=8) and place the correct amount of electrons!");
+      }
+    }
+
+
+    /* ==========================================
+       TAB 4: TIMELINE (HISTORICAL MODELS)
+       ========================================== */
+    let currentModel = 'dalton';
+    let historyCanvas, historyCtx;
+    let historyAnimationId;
+
+    // Simulation states
+    let daltonBalls = [];
+    let thomsonElectrons = [];
+    let rutherfordAlphas = [];
+    let bohrElectronPos = 1; // Orbit level
+    let bohrPhotonWave = null;
+    let schrodingerParticles = [];
+
+    function initHistoryCanvas() {
+      historyCanvas = document.getElementById('history-canvas');
+      historyCtx = historyCanvas.getContext('2d');
+
+      const rect = historyCanvas.parentElement.getBoundingClientRect();
+      const width = rect.width || 600;
+      historyCanvas.width = width * window.devicePixelRatio;
+      historyCanvas.height = 360 * window.devicePixelRatio;
+      historyCanvas.style.width = `${width}px`;
+      historyCanvas.style.height = '360px';
+      historyCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      // Re-init variables
+      daltonBalls = [
+        { x: 100, y: 180, vx: 4, vy: 0, r: 25, color: '#ff0055' },
+        { x: 300, y: 180, vx: 0, vy: 0, r: 25, color: '#00b4d8' }
+      ];
+
+      thomsonElectrons = [];
+      for (let i = 0; i < 8; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let dist = Math.random() * 45;
+        thomsonElectrons.push({
+          x: 200 + Math.cos(angle) * dist,
+          y: 180 + Math.sin(angle) * dist,
+          isDragging: false
+        });
+      }
+
+      // Add mouse events for Thomson and Dalton
+      historyCanvas.removeEventListener('mousedown', handleHistoryMouseDown);
+      historyCanvas.addEventListener('mousedown', handleHistoryMouseDown);
+
+      if (historyAnimationId) cancelAnimationFrame(historyAnimationId);
+      renderHistoryFrame();
+    }
+
+    function handleHistoryMouseDown(e) {
+      const rect = historyCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      if (currentModel === 'dalton') {
+        // Reset/fire ball speed
+        daltonBalls[0].x = 50;
+        daltonBalls[0].vx = 5;
+        daltonBalls[1].x = 300;
+        daltonBalls[1].vx = 0;
+      } else if (currentModel === 'thomson') {
+        // Check if clicked electron to drag
+        thomsonElectrons.forEach(el => {
+          let dist = Math.hypot(el.x - mouseX, el.y - mouseY);
+          if (dist < 12) {
+            el.x = mouseX;
+            el.y = mouseY;
+          }
+        });
+      }
+    }
+
+    function switchHistoricalModel(modelId) {
+      currentModel = modelId;
+      document.querySelectorAll('.timeline-node').forEach(node => {
+        node.classList.remove('active');
+      });
+      document.getElementById(`node-${modelId}`).classList.add('active');
+
+      const title = document.getElementById('history-model-title');
+      const scientist = document.getElementById('history-model-scientist');
+      const desc = document.getElementById('history-model-desc');
+      const controls = document.getElementById('history-controls-container');
+      const insight = document.getElementById('history-scientific-insight');
+      const instructions = document.getElementById('history-canvas-instruction');
+
+      if (modelId === 'dalton') {
+        title.innerText = "Dalton's Billiard Ball Model";
+        scientist.innerText = "John Dalton (1803)";
+        desc.innerText = "John Dalton proposed that atoms are hard, solid, indivisible billiard balls. He postulated that all atoms of a specific element are identical and that chemical compounds are formed when atoms combine in fixed whole-number ratios.";
+        insight.innerText = "This solid model could explain mass laws, but failed to explain electrical properties or subatomic structure.";
+        instructions.innerHTML = `<i class="fa-solid fa-mouse"></i> Click to launch chemical collision simulation.`;
+
+        controls.innerHTML = `
+          <button class="btn btn-accent" onclick="daltonBalls[0].x=50; daltonBalls[0].vx=5; daltonBalls[1].x=300; daltonBalls[1].vx=0;">
+            Collide Atoms
+          </button>
+        `;
+      } else if (modelId === 'thomson') {
+        title.innerText = "Thomson's Plum Pudding Model";
+        scientist.innerText = "J.J. Thomson (1904)";
+        desc.innerText = "After discovering the electron in 1897, J.J. Thomson proposed that the atom consists of negatively charged corpuscles (electrons) suspended inside a positively charged soup or cloud, similar to chocolate chips in cookie dough.";
+        insight.innerText = "This was the first model that acknowledged the existence of subatomic charged units, proving the atom is not indivisible.";
+        instructions.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> Click anywhere to shuffle and reset the electron pudding placements.`;
+
+        controls.innerHTML = `
+          <button class="btn btn-accent" onclick="initHistoryCanvas()">
+            Shuffle Pudding Electrons
+          </button>
+        `;
+      } else if (modelId === 'rutherford') {
+        title.innerText = "Rutherford's Gold Foil Experiment";
+        scientist.innerText = "Ernest Rutherford (1911)";
+        desc.innerText = "By shooting positively charged alpha particles at an extremely thin sheet of gold foil, Rutherford observed that while 99% of particles passed straight through, a tiny fraction deflected backward. This disproved Thomson's solid pudding model.";
+        insight.innerText = "This experiment revealed the atom consists mostly of empty space, with a tiny, dense, positively charged nucleus at the center.";
+        instructions.innerHTML = `Observe the stream of alpha particles. See how they deflect when they approach the gold nucleus close-up.`;
+
+        controls.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 0.8rem; color: var(--text-muted);">ALPHA PARTICLE EMISSION SPEED</label>
+            <button class="btn btn-accent" id="btn-toggle-alpha" onclick="window.fastAlpha = !window.fastAlpha">
+              Toggle Slow Motion Mode
+            </button>
+          </div>
+        `;
+      } else if (modelId === 'bohr') {
+        title.innerText = "Bohr's Quantum Energy Jump";
+        scientist.innerText = "Niels Bohr (1913)";
+        desc.innerText = "Niels Bohr modified Rutherford's planetary orbits. He proved electrons travel only in distinct orbits with specific quantized energies. Jumping down releases a photon (light), and jumping up requires energy absorption.";
+        insight.innerText = "Bohr explained the exact spectral emission lines of hydrogen, proving energy quantum states within atom structures.";
+        instructions.innerHTML = `<i class="fa-solid fa-arrow-up-long"></i> Click orbits to force the electron to jump levels. Watch photons emit!`;
+
+        controls.innerHTML = `
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-accent" style="flex: 1;" onclick="triggerBohrJump(3)">Jump to n=3 (Excite)</button>
+            <button class="btn btn-secondary" style="flex: 1;" onclick="triggerBohrJump(1)">Jump to n=1 (Ground State)</button>
+          </div>
+        `;
+      } else if (modelId === 'schrodinger') {
+        title.innerText = "Schrödinger's Wave Cloud Model";
+        scientist.innerText = "Erwin Schrödinger (1926)";
+        desc.innerText = "Erwin Schrödinger formulated wave mechanics to describe electrons as probability waves. Instead of fixed orbits, electrons exist in 3D probability clouds (orbitals) defining where they are most likely to be found.";
+        insight.innerText = "This remains our modern orbital model. It explains chemical hybridization and why electron positions cannot be pinned down exactly.";
+        instructions.innerHTML = `Toggle orbital configurations to view probability densities of the cloud structures.`;
+
+        controls.innerHTML = `
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-accent" style="flex: 1;" onclick="window.activeCloud = '1s'">1s Spherical</button>
+            <button class="btn btn-secondary" style="flex: 1;" onclick="window.activeCloud = '2p'">2p Dumbbell</button>
+          </div>
+        `;
+      }
+    }
+
+    function triggerBohrJump(level) {
+      if (level === bohrElectronPos) return;
+
+      const energyDiff = Math.abs(level - bohrElectronPos);
+      const isEmission = level < bohrElectronPos;
+
+      bohrElectronPos = level;
+
+      if (isEmission) {
+        // Create an outgoing photon wave
+        let color = '#fee440'; // yellow (n=2 to 1)
+        if (energyDiff === 2) color = '#00f5d4'; // cyan (n=3 to 1)
+        bohrPhotonWave = {
+          x: 200,
+          y: 180,
+          radius: 20,
+          opacity: 1,
+          color: color
+        };
+      }
+    }
+
+    function renderHistoryFrame() {
+      if (currentView !== 'history' || !historyCanvas) {
+        return;
+      }
+
+      const w = historyCanvas.width / window.devicePixelRatio;
+      const h = historyCanvas.height / window.devicePixelRatio;
+      historyCtx.clearRect(0, 0, w, h);
+
+      if (currentModel === 'dalton') {
+        // Update billiard ball physics
+        let b1 = daltonBalls[0];
+        let b2 = daltonBalls[1];
+
+        b1.x += b1.vx;
+        b2.x += b2.vx;
+
+        // Collision check
+        if (b1.x + b1.r >= b2.x - b2.r) {
+          // Elastic collision exchange
+          let temp = b1.vx;
+          b1.vx = b2.vx;
+          b2.vx = temp;
+        }
+
+        // Draw balls
+        daltonBalls.forEach(b => {
+          historyCtx.beginPath();
+          historyCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          historyCtx.fillStyle = b.color;
+          historyCtx.fill();
+
+          // Highlight
+          historyCtx.beginPath();
+          historyCtx.arc(b.x - 7, b.y - 7, 7, 0, Math.PI * 2);
+          historyCtx.fillStyle = 'rgba(255,255,255,0.3)';
+          historyCtx.fill();
+        });
+
+      } else if (currentModel === 'thomson') {
+        // Draw Thomson Positive charge base
+        historyCtx.beginPath();
+        historyCtx.arc(200, 180, 80, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'rgba(255, 42, 122, 0.15)';
+        historyCtx.strokeStyle = varColorValue('--color-proton');
+        historyCtx.lineWidth = 2;
+        historyCtx.stroke();
+        historyCtx.fill();
+
+        // Write "+" signs in background
+        historyCtx.font = '16px Outfit';
+        historyCtx.fillStyle = 'rgba(255, 42, 122, 0.4)';
+        historyCtx.fillText("+", 160, 160);
+        historyCtx.fillText("+", 230, 150);
+        historyCtx.fillText("+", 170, 210);
+        historyCtx.fillText("+", 220, 210);
+
+        // Draw chocolate chip electrons
+        thomsonElectrons.forEach(el => {
+          historyCtx.beginPath();
+          historyCtx.arc(el.x, el.y, 8, 0, Math.PI * 2);
+          historyCtx.fillStyle = varColorValue('--color-electron');
+          historyCtx.shadowColor = varColorValue('--color-electron');
+          historyCtx.shadowBlur = 6;
+          historyCtx.fill();
+          historyCtx.shadowBlur = 0;
+
+          // minus symbol inside electron
+          historyCtx.fillStyle = '#000';
+          historyCtx.font = 'bold 10px sans-serif';
+          historyCtx.textAlign = 'center';
+          historyCtx.textBaseline = 'middle';
+          historyCtx.fillText("-", el.x, el.y);
+        });
+
+      } else if (currentModel === 'rutherford') {
+        // Target gold nucleus at center
+        let goldNucleus = { x: 250, y: 180, r: 24, charge: 79 };
+        
+        // Draw Gold Nucleus
+        historyCtx.beginPath();
+        historyCtx.arc(goldNucleus.x, goldNucleus.y, goldNucleus.r, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'gold';
+        historyCtx.shadowColor = 'gold';
+        historyCtx.shadowBlur = 10;
+        historyCtx.fill();
+        historyCtx.shadowBlur = 0;
+        
+        historyCtx.fillStyle = 'black';
+        historyCtx.font = 'bold 11px sans-serif';
+        historyCtx.textAlign = 'center';
+        historyCtx.textBaseline = 'middle';
+        historyCtx.fillText("+79", goldNucleus.x, goldNucleus.y);
+
+        // Update & Emit Alpha particles
+        if (Math.random() < 0.08) {
+          rutherfordAlphas.push({
+            x: 0,
+            y: 80 + Math.random() * 200,
+            vx: window.fastAlpha ? 1.5 : 4,
+            vy: 0,
+            deflected: false
+          });
+        }
+
+        rutherfordAlphas.forEach((alpha, idx) => {
+          alpha.x += alpha.vx;
+          alpha.y += alpha.vy;
+
+          // Electrostatic repulsion deflection logic (Coulomb scattering)
+          let dx = goldNucleus.x - alpha.x;
+          let dy = goldNucleus.y - alpha.y;
+          let dist = Math.hypot(dx, dy);
+
+          if (dist < 100 && !alpha.deflected) {
+            // Apply angular deviation force based on proximity
+            let force = (2200) / (dist * dist);
+            let angle = Math.atan2(dy, dx) + Math.PI; // point away from core
+            
+            alpha.vx += Math.cos(angle) * force * 0.1;
+            alpha.vy += Math.sin(angle) * force * 0.1;
+            
+            if (dist < goldNucleus.r + 5) {
+              alpha.deflected = true;
+            }
+          }
+
+          // Draw Alpha particle
+          historyCtx.beginPath();
+          historyCtx.arc(alpha.x, alpha.y, 4, 0, Math.PI * 2);
+          historyCtx.fillStyle = varColorValue('--color-neutron');
+          historyCtx.fill();
+        });
+
+        // Filter out particles that left screen
+        rutherfordAlphas = rutherfordAlphas.filter(alpha => alpha.x > -20 && alpha.x < w + 20 && alpha.y > -20 && alpha.y < h + 20);
+
+      } else if (currentModel === 'bohr') {
+        const center = { x: 200, y: 180 };
+        const orbitRadii = [40, 75, 110];
+
+        // Draw nucleus center
+        historyCtx.beginPath();
+        historyCtx.arc(center.x, center.y, 14, 0, Math.PI * 2);
+        historyCtx.fillStyle = varColorValue('--color-proton');
+        historyCtx.fill();
+
+        // Draw shell guides
+        orbitRadii.forEach((r, idx) => {
+          historyCtx.beginPath();
+          historyCtx.arc(center.x, center.y, r, 0, Math.PI * 2);
+          historyCtx.strokeStyle = (bohrElectronPos === (idx + 1)) ? 'rgba(0, 245, 212, 0.4)' : 'rgba(255, 255, 255, 0.08)';
+          historyCtx.lineWidth = 1;
+          historyCtx.stroke();
+        });
+
+        // Orbiting electron
+        let speed = 0.03;
+        if (!window.bohrAngle) window.bohrAngle = 0;
+        window.bohrAngle += speed;
+
+        let activeR = orbitRadii[bohrElectronPos - 1];
+        let ex = center.x + Math.cos(window.bohrAngle) * activeR;
+        let ey = center.y + Math.sin(window.bohrAngle) * activeR;
+
+        // Draw Electron
+        historyCtx.beginPath();
+        historyCtx.arc(ex, ey, 6, 0, Math.PI * 2);
+        historyCtx.fillStyle = varColorValue('--color-electron');
+        historyCtx.shadowColor = varColorValue('--color-electron');
+        historyCtx.shadowBlur = 8;
+        historyCtx.fill();
+        historyCtx.shadowBlur = 0;
+
+        // Draw photon emission wave if active
+        if (bohrPhotonWave) {
+          bohrPhotonWave.radius += 2.5;
+          bohrPhotonWave.opacity -= 0.02;
+
+          historyCtx.beginPath();
+          historyCtx.arc(bohrPhotonWave.x, bohrPhotonWave.y, bohrPhotonWave.radius, 0, Math.PI * 2);
+          historyCtx.strokeStyle = bohrPhotonWave.color;
+          historyCtx.lineWidth = 2;
+          historyCtx.globalAlpha = Math.max(0, bohrPhotonWave.opacity);
+          historyCtx.stroke();
+          historyCtx.globalAlpha = 1.0; // reset
+
+          if (bohrPhotonWave.opacity <= 0) {
+            bohrPhotonWave = null;
+          }
+        }
+
+      } else if (currentModel === 'schrodinger') {
+        const center = { x: 200, y: 180 };
+        const cloudType = window.activeCloud || '1s';
+
+        // Particle system for wave probability distribution
+        if (schrodingerParticles.length < 250) {
+          schrodingerParticles.push({
+            angle: Math.random() * Math.PI * 2,
+            dist: 0,
+            opacity: 1
+          });
+        }
+
+        // Generate probability distance using quantum distributions
+        schrodingerParticles.forEach(p => {
+          p.opacity -= 0.01;
+          if (p.opacity <= 0) {
+            p.opacity = 1;
+            p.angle = Math.random() * Math.PI * 2;
+            
+            if (cloudType === '1s') {
+              // High density near center (spherical s orbital)
+              p.dist = Math.pow(Math.random(), 1.5) * 60;
+            } else {
+              // Dumbbell shape p orbital probability density
+              let isLeft = Math.random() < 0.5;
+              let theta = isLeft ? (Math.PI + (Math.random() - 0.5) * 0.8) : ((Math.random() - 0.5) * 0.8);
+              p.angle = theta;
+              p.dist = (0.2 + Math.random() * 0.8) * 80;
+            }
+          }
+
+          let px = center.x + Math.cos(p.angle) * p.dist;
+          let py = center.y + Math.sin(p.angle) * p.dist;
+
+          historyCtx.beginPath();
+          historyCtx.arc(px, py, 2.5, 0, Math.PI * 2);
+          historyCtx.fillStyle = `rgba(0, 245, 212, ${p.opacity * 0.35})`;
+          historyCtx.fill();
+        });
+      }
+
+      historyAnimationId = requestAnimationFrame(renderHistoryFrame);
+    }
+
+
+
+    /* ==========================================
+       TAB 3: ELECTRON CONFIGURATION CHALLENGE
+       ========================================== */
+    let shellTargetId = 6; // default Carbon
+    let shellScore = 0;
+    let shellElectronsCount = 0;
+    let shellRings = [0, 0, 0]; // K, L, M electron counts
+    
+    function initShellGame() {
+      loadTargetElementForShellGame();
+    }
+
+    function loadTargetElementForShellGame() {
+      const el = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      document.getElementById('shell-target-element').innerText = el.name;
+      document.getElementById('shell-target-hint').innerText = `Atomic Number ${el.z} (${el.symbol}). Correctly position all electrons in their Bohr shells.`;
+      
+      shellElectronsCount = 0;
+      shellRings = [0, 0, 0];
+      
+      updateShellGameBoard();
+    }
+
+    function loadTargetForShellGame(z) {
+      shellTargetId = z;
+      showView('shell');
+      setTimeout(loadTargetElementForShellGame, 100);
+    }
+
+    function updateShellGameBoard() {
+      const board = document.getElementById('shell-game-board');
+      board.innerHTML = '';
+
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      const totalRings = targetEl.shell.length;
+      
+      // Update UI panels
+      document.getElementById('shell-current-count').innerText = `${shellElectronsCount} / ${targetEl.z}`;
+      
+      // Calculate notation
+      let notation = generateActiveNotation(shellRings);
+      document.getElementById('shell-notation-string').innerHTML = notation;
+
+      // Calculate configuration representation
+      document.getElementById('shell-formula-label').innerText = shellRings.filter((v,i) => i < totalRings).join(', ');
+
+      const centerRadius = 50;
+      const ringRadii = [80, 130, 180];
+      const shellLabels = ['K', 'L', 'M'];
+
+      // Render Nucleus Center
+      const core = document.createElement('div');
+      core.style.position = 'absolute';
+      core.style.width = '70px';
+      core.style.height = '70px';
+      core.style.borderRadius = '50%';
+      core.style.background = 'radial-gradient(circle, var(--color-proton) 0%, var(--color-primary) 100%)';
+      core.style.display = 'flex';
+      core.style.flexDirection = 'column';
+      core.style.justifyContent = 'center';
+      core.style.alignItems = 'center';
+      core.style.boxShadow = '0 0 25px rgba(255, 42, 122, 0.4)';
+      core.innerHTML = `
+        <span style="font-weight:800; font-size:1.1rem;">${targetEl.symbol}</span>
+        <span style="font-size:0.65rem; opacity:0.8;">+${targetEl.z}</span>
+      `;
+      board.appendChild(core);
+
+      // Render Shell Rings and active electron dots
+      for (let rIdx = 0; rIdx < totalRings; rIdx++) {
+        const radius = ringRadii[rIdx];
+        const ring = document.createElement('div');
+        ring.className = 'shell-ring-btn';
+        ring.style.width = `${radius * 2}px`;
+        ring.style.height = `${radius * 2}px`;
+        board.appendChild(ring);
+
+        // Add shell name tag
+        const tag = document.createElement('div');
+        tag.className = 'shell-label-tag';
+        tag.style.top = `${240 - radius - 10}px`;
+        tag.innerText = `Shell ${shellLabels[rIdx]}`;
+        board.appendChild(tag);
+
+        // Render electrons assigned to this ring
+        let count = shellRings[rIdx];
+        for (let e = 0; e < count; e++) {
+          let angle = (e / count) * Math.PI * 2;
+          let dot = document.createElement('div');
+          dot.style.position = 'absolute';
+          dot.style.width = '12px';
+          dot.style.height = '12px';
+          dot.style.borderRadius = '50%';
+          dot.style.background = 'var(--color-electron)';
+          dot.style.boxShadow = 'var(--shadow-glow-electron)';
+          
+          let dx = radius * Math.cos(angle);
+          let dy = radius * Math.sin(angle);
+          dot.style.transform = `translate(${dx}px, ${dy}px)`;
+          ring.appendChild(dot);
+        }
+      }
+    }
+
+    function addElectronToGameShell() {
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      if (shellElectronsCount >= targetEl.z) return;
+
+      // Assign to first shell that is not full
+      const caps = [2, 8, 8];
+      for (let i = 0; i < targetEl.shell.length; i++) {
+        if (shellRings[i] < caps[i]) {
+          shellRings[i]++;
+          shellElectronsCount++;
+          break;
+        }
+      }
+      updateShellGameBoard();
+    }
+
+    function removeElectronFromGameShell() {
+      if (shellElectronsCount <= 0) return;
+
+      // Subtract from outermost active shell
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      for (let i = targetEl.shell.length - 1; i >= 0; i--) {
+        if (shellRings[i] > 0) {
+          shellRings[i]--;
+          shellElectronsCount--;
+          break;
+        }
+      }
+      updateShellGameBoard();
+    }
+
+    function generateActiveNotation(rings) {
+      let leftK = rings[0];
+      let leftL = rings[1];
+      let leftM = rings[2];
+
+      let build = [];
+      // 1s
+      let f1s = Math.min(leftK, 2);
+      build.push(`1s<sup>${f1s}</sup>`);
+
+      // 2s
+      let f2s = Math.min(leftL, 2);
+      build.push(`2s<sup>${f2s}</sup>`);
+      leftL -= f2s;
+
+      // 2p
+      let f2p = Math.min(leftL, 6);
+      build.push(`2p<sup>${f2p}</sup>`);
+
+      // 3s
+      let f3s = Math.min(leftM, 2);
+      build.push(`3s<sup>${f3s}</sup>`);
+      leftM -= f3s;
+
+      // 3p
+      let f3p = Math.min(leftM, 6);
+      build.push(`3p<sup>${f3p}</sup>`);
+
+      return build.join(' ');
+    }
+
+    function checkShellConfiguration() {
+      const targetEl = ELEMENTS_DATABASE.find(item => item.z === shellTargetId);
+      
+      let correct = true;
+      for (let i = 0; i < targetEl.shell.length; i++) {
+        if (shellRings[i] !== targetEl.shell[i]) {
+          correct = false;
+        }
+      }
+
+      if (correct) {
+        shellScore += 10;
+        document.getElementById('shell-score').innerText = `Score: ${shellScore}`;
+        
+        // Show celebratory alert
+        alert(`Correct! You successfully constructed the configuration of ${targetEl.name}!`);
+        
+        // Load next element
+        let nextZ = shellTargetId + 1;
+        if (nextZ > 18) nextZ = 1;
+        shellTargetId = nextZ;
+        loadTargetElementForShellGame();
+      } else {
+        alert("Configuration is incorrect. Review shell capacity limits (K=2, L=8, M=8) and place the correct amount of electrons!");
+      }
+    }
+
+
+    /* ==========================================
+       TAB 4: TIMELINE (HISTORICAL MODELS)
+       ========================================== */
+    let currentModel = 'dalton';
+    let historyCanvas, historyCtx;
+    let historyAnimationId;
+
+    // Simulation states
+    let daltonBalls = [];
+    let thomsonElectrons = [];
+    let rutherfordAlphas = [];
+    let bohrElectronPos = 1; // Orbit level
+    let bohrPhotonWave = null;
+    let schrodingerParticles = [];
+
+    function initHistoryCanvas() {
+      historyCanvas = document.getElementById('history-canvas');
+      historyCtx = historyCanvas.getContext('2d');
+
+      const rect = historyCanvas.parentElement.getBoundingClientRect();
+      historyCanvas.width = rect.width * window.devicePixelRatio;
+      historyCanvas.height = 360 * window.devicePixelRatio;
+      historyCanvas.style.height = '360px';
+      historyCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      // Re-init variables
+      daltonBalls = [
+        { x: 100, y: 180, vx: 4, vy: 0, r: 25, color: '#ff0055' },
+        { x: 300, y: 180, vx: 0, vy: 0, r: 25, color: '#00b4d8' }
+      ];
+
+      thomsonElectrons = [];
+      for (let i = 0; i < 8; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let dist = Math.random() * 45;
+        thomsonElectrons.push({
+          x: 200 + Math.cos(angle) * dist,
+          y: 180 + Math.sin(angle) * dist,
+          isDragging: false
+        });
+      }
+
+      // Add mouse events for Thomson and Dalton
+      historyCanvas.removeEventListener('mousedown', handleHistoryMouseDown);
+      historyCanvas.addEventListener('mousedown', handleHistoryMouseDown);
+
+      if (historyAnimationId) cancelAnimationFrame(historyAnimationId);
+      renderHistoryFrame();
+    }
+
+    function handleHistoryMouseDown(e) {
+      const rect = historyCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      if (currentModel === 'dalton') {
+        // Reset/fire ball speed
+        daltonBalls[0].x = 50;
+        daltonBalls[0].vx = 5;
+        daltonBalls[1].x = 300;
+        daltonBalls[1].vx = 0;
+      } else if (currentModel === 'thomson') {
+        // Check if clicked electron to drag
+        thomsonElectrons.forEach(el => {
+          let dist = Math.hypot(el.x - mouseX, el.y - mouseY);
+          if (dist < 12) {
+            el.x = mouseX;
+            el.y = mouseY;
+          }
+        });
+      }
+    }
+
+    function switchHistoricalModel(modelId) {
+      currentModel = modelId;
+      document.querySelectorAll('.timeline-node').forEach(node => {
+        node.classList.remove('active');
+      });
+      document.getElementById(`node-${modelId}`).classList.add('active');
+
+      const title = document.getElementById('history-model-title');
+      const scientist = document.getElementById('history-model-scientist');
+      const desc = document.getElementById('history-model-desc');
+      const controls = document.getElementById('history-controls-container');
+      const insight = document.getElementById('history-scientific-insight');
+      const instructions = document.getElementById('history-canvas-instruction');
+
+      if (modelId === 'dalton') {
+        title.innerText = "Dalton's Billiard Ball Model";
+        scientist.innerText = "John Dalton (1803)";
+        desc.innerText = "John Dalton proposed that atoms are hard, solid, indivisible billiard balls. He postulated that all atoms of a specific element are identical and that chemical compounds are formed when atoms combine in fixed whole-number ratios.";
+        insight.innerText = "This solid model could explain mass laws, but failed to explain electrical properties or subatomic structure.";
+        instructions.innerHTML = `<i class="fa-solid fa-mouse"></i> Click to launch chemical collision simulation.`;
+
+        controls.innerHTML = `
+          <button class="btn btn-accent" onclick="daltonBalls[0].x=50; daltonBalls[0].vx=5; daltonBalls[1].x=300; daltonBalls[1].vx=0;">
+            Collide Atoms
+          </button>
+        `;
+      } else if (modelId === 'thomson') {
+        title.innerText = "Thomson's Plum Pudding Model";
+        scientist.innerText = "J.J. Thomson (1904)";
+        desc.innerText = "After discovering the electron in 1897, J.J. Thomson proposed that the atom consists of negatively charged corpuscles (electrons) suspended inside a positively charged soup or cloud, similar to chocolate chips in cookie dough.";
+        insight.innerText = "This was the first model that acknowledged the existence of subatomic charged units, proving the atom is not indivisible.";
+        instructions.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> Click anywhere to shuffle and reset the electron pudding placements.`;
+
+        controls.innerHTML = `
+          <button class="btn btn-accent" onclick="initHistoryCanvas()">
+            Shuffle Pudding Electrons
+          </button>
+        `;
+      } else if (modelId === 'rutherford') {
+        title.innerText = "Rutherford's Gold Foil Experiment";
+        scientist.innerText = "Ernest Rutherford (1911)";
+        desc.innerText = "By shooting positively charged alpha particles at an extremely thin sheet of gold foil, Rutherford observed that while 99% of particles passed straight through, a tiny fraction deflected backward. This disproved Thomson's solid pudding model.";
+        insight.innerText = "This experiment revealed the atom consists mostly of empty space, with a tiny, dense, positively charged nucleus at the center.";
+        instructions.innerHTML = `Observe the stream of alpha particles. See how they deflect when they approach the gold nucleus close-up.`;
+
+        controls.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 0.8rem; color: var(--text-muted);">ALPHA PARTICLE EMISSION SPEED</label>
+            <button class="btn btn-accent" id="btn-toggle-alpha" onclick="window.fastAlpha = !window.fastAlpha">
+              Toggle Slow Motion Mode
+            </button>
+          </div>
+        `;
+      } else if (modelId === 'bohr') {
+        title.innerText = "Bohr's Quantum Energy Jump";
+        scientist.innerText = "Niels Bohr (1913)";
+        desc.innerText = "Niels Bohr modified Rutherford's planetary orbits. He proved electrons travel only in distinct orbits with specific quantized energies. Jumping down releases a photon (light), and jumping up requires energy absorption.";
+        insight.innerText = "Bohr explained the exact spectral emission lines of hydrogen, proving energy quantum states within atom structures.";
+        instructions.innerHTML = `<i class="fa-solid fa-arrow-up-long"></i> Click orbits to force the electron to jump levels. Watch photons emit!`;
+
+        controls.innerHTML = `
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-accent" style="flex: 1;" onclick="triggerBohrJump(3)">Jump to n=3 (Excite)</button>
+            <button class="btn btn-secondary" style="flex: 1;" onclick="triggerBohrJump(1)">Jump to n=1 (Ground State)</button>
+          </div>
+        `;
+      } else if (modelId === 'schrodinger') {
+        title.innerText = "Schrödinger's Wave Cloud Model";
+        scientist.innerText = "Erwin Schrödinger (1926)";
+        desc.innerText = "Erwin Schrödinger formulated wave mechanics to describe electrons as probability waves. Instead of fixed orbits, electrons exist in 3D probability clouds (orbitals) defining where they are most likely to be found.";
+        insight.innerText = "This remains our modern orbital model. It explains chemical hybridization and why electron positions cannot be pinned down exactly.";
+        instructions.innerHTML = `Toggle orbital configurations to view probability densities of the cloud structures.`;
+
+        controls.innerHTML = `
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-accent" style="flex: 1;" onclick="window.activeCloud = '1s'">1s Spherical</button>
+            <button class="btn btn-secondary" style="flex: 1;" onclick="window.activeCloud = '2p'">2p Dumbbell</button>
+          </div>
+        `;
+      }
+    }
+
+    function triggerBohrJump(level) {
+      if (level === bohrElectronPos) return;
+
+      const energyDiff = Math.abs(level - bohrElectronPos);
+      const isEmission = level < bohrElectronPos;
+
+      bohrElectronPos = level;
+
+      if (isEmission) {
+        // Create an outgoing photon wave
+        let color = '#fee440'; // yellow (n=2 to 1)
+        if (energyDiff === 2) color = '#00f5d4'; // cyan (n=3 to 1)
+        bohrPhotonWave = {
+          x: 200,
+          y: 180,
+          radius: 20,
+          opacity: 1,
+          color: color
+        };
+      }
+    }
+
+    function renderHistoryFrame() {
+      if (currentView !== 'history' || !historyCanvas) {
+        historyAnimationId = requestAnimationFrame(renderHistoryFrame);
+        return;
+      }
+
+      const w = historyCanvas.width / window.devicePixelRatio;
+      const h = historyCanvas.height / window.devicePixelRatio;
+      historyCtx.clearRect(0, 0, w, h);
+
+      if (currentModel === 'dalton') {
+        // Update billiard ball physics
+        let b1 = daltonBalls[0];
+        let b2 = daltonBalls[1];
+
+        b1.x += b1.vx;
+        b2.x += b2.vx;
+
+        // Collision check
+        if (b1.x + b1.r >= b2.x - b2.r) {
+          // Elastic collision exchange
+          let temp = b1.vx;
+          b1.vx = b2.vx;
+          b2.vx = temp;
+        }
+
+        // Draw balls
+        daltonBalls.forEach(b => {
+          historyCtx.beginPath();
+          historyCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          historyCtx.fillStyle = b.color;
+          historyCtx.fill();
+
+          // Highlight
+          historyCtx.beginPath();
+          historyCtx.arc(b.x - 7, b.y - 7, 7, 0, Math.PI * 2);
+          historyCtx.fillStyle = 'rgba(255,255,255,0.3)';
+          historyCtx.fill();
+        });
+
+      } else if (currentModel === 'thomson') {
+        // Draw Thomson Positive charge base
+        historyCtx.beginPath();
+        historyCtx.arc(200, 180, 80, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'rgba(255, 42, 122, 0.15)';
+        historyCtx.strokeStyle = 'var(--color-proton)';
+        historyCtx.lineWidth = 2;
+        historyCtx.stroke();
+        historyCtx.fill();
+
+        // Write "+" signs in background
+        historyCtx.font = '16px Outfit';
+        historyCtx.fillStyle = 'rgba(255, 42, 122, 0.4)';
+        historyCtx.fillText("+", 160, 160);
+        historyCtx.fillText("+", 230, 150);
+        historyCtx.fillText("+", 170, 210);
+        historyCtx.fillText("+", 220, 210);
+
+        // Draw chocolate chip electrons
+        thomsonElectrons.forEach(el => {
+          historyCtx.beginPath();
+          historyCtx.arc(el.x, el.y, 8, 0, Math.PI * 2);
+          historyCtx.fillStyle = 'var(--color-electron)';
+          historyCtx.shadowColor = 'var(--color-electron)';
+          historyCtx.shadowBlur = 6;
+          historyCtx.fill();
+          historyCtx.shadowBlur = 0;
+
+          // minus symbol inside electron
+          historyCtx.fillStyle = '#000';
+          historyCtx.font = 'bold 10px sans-serif';
+          historyCtx.textAlign = 'center';
+          historyCtx.textBaseline = 'middle';
+          historyCtx.fillText("-", el.x, el.y);
+        });
+
+      } else if (currentModel === 'rutherford') {
+        // Target gold nucleus at center
+        let goldNucleus = { x: 250, y: 180, r: 24, charge: 79 };
+        
+        // Draw Gold Nucleus
+        historyCtx.beginPath();
+        historyCtx.arc(goldNucleus.x, goldNucleus.y, goldNucleus.r, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'gold';
+        historyCtx.shadowColor = 'gold';
+        historyCtx.shadowBlur = 10;
+        historyCtx.fill();
+        historyCtx.shadowBlur = 0;
+        
+        historyCtx.fillStyle = 'black';
+        historyCtx.font = 'bold 11px sans-serif';
+        historyCtx.textAlign = 'center';
+        historyCtx.textBaseline = 'middle';
+        historyCtx.fillText("+79", goldNucleus.x, goldNucleus.y);
+
+        // Update & Emit Alpha particles
+        if (Math.random() < 0.08) {
+          rutherfordAlphas.push({
+            x: 0,
+            y: 80 + Math.random() * 200,
+            vx: window.fastAlpha ? 1.5 : 4,
+            vy: 0,
+            deflected: false
+          });
+        }
+
+        rutherfordAlphas.forEach((alpha, idx) => {
+          alpha.x += alpha.vx;
+          alpha.y += alpha.vy;
+
+          // Electrostatic repulsion deflection logic (Coulomb scattering)
+          let dx = goldNucleus.x - alpha.x;
+          let dy = goldNucleus.y - alpha.y;
+          let dist = Math.hypot(dx, dy);
+
+          if (dist < 100 && !alpha.deflected) {
+            // Apply angular deviation force based on proximity
+            let force = (2200) / (dist * dist);
+            let angle = Math.atan2(dy, dx) + Math.PI; // point away from core
+            
+            alpha.vx += Math.cos(angle) * force * 0.1;
+            alpha.vy += Math.sin(angle) * force * 0.1;
+            
+            if (dist < goldNucleus.r + 5) {
+              alpha.deflected = true;
+            }
+          }
+
+          // Draw Alpha particle
+          historyCtx.beginPath();
+          historyCtx.arc(alpha.x, alpha.y, 4, 0, Math.PI * 2);
+          historyCtx.fillStyle = 'var(--color-neutron)';
+          historyCtx.fill();
+        });
+
+        // Filter out particles that left screen
+        rutherfordAlphas = rutherfordAlphas.filter(alpha => alpha.x > -20 && alpha.x < w + 20 && alpha.y > -20 && alpha.y < h + 20);
+
+      } else if (currentModel === 'bohr') {
+        const center = { x: 200, y: 180 };
+        const orbitRadii = [40, 75, 110];
+
+        // Draw nucleus center
+        historyCtx.beginPath();
+        historyCtx.arc(center.x, center.y, 14, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'var(--color-proton)';
+        historyCtx.fill();
+
+        // Draw shell guides
+        orbitRadii.forEach((r, idx) => {
+          historyCtx.beginPath();
+          historyCtx.arc(center.x, center.y, r, 0, Math.PI * 2);
+          historyCtx.strokeStyle = (bohrElectronPos === (idx + 1)) ? 'rgba(0, 245, 212, 0.4)' : 'rgba(255, 255, 255, 0.08)';
+          historyCtx.lineWidth = 1;
+          historyCtx.stroke();
+        });
+
+        // Orbiting electron
+        let speed = 0.03;
+        if (!window.bohrAngle) window.bohrAngle = 0;
+        window.bohrAngle += speed;
+
+        let activeR = orbitRadii[bohrElectronPos - 1];
+        let ex = center.x + Math.cos(window.bohrAngle) * activeR;
+        let ey = center.y + Math.sin(window.bohrAngle) * activeR;
+
+        // Draw Electron
+        historyCtx.beginPath();
+        historyCtx.arc(ex, ey, 6, 0, Math.PI * 2);
+        historyCtx.fillStyle = 'var(--color-electron)';
+        historyCtx.shadowColor = 'var(--color-electron)';
+        historyCtx.shadowBlur = 8;
+        historyCtx.fill();
+        historyCtx.shadowBlur = 0;
+
+        // Draw photon emission wave if active
+        if (bohrPhotonWave) {
+          bohrPhotonWave.radius += 2.5;
+          bohrPhotonWave.opacity -= 0.02;
+
+          historyCtx.beginPath();
+          historyCtx.arc(bohrPhotonWave.x, bohrPhotonWave.y, bohrPhotonWave.radius, 0, Math.PI * 2);
+          historyCtx.strokeStyle = bohrPhotonWave.color;
+          historyCtx.lineWidth = 2;
+          historyCtx.globalAlpha = Math.max(0, bohrPhotonWave.opacity);
+          historyCtx.stroke();
+          historyCtx.globalAlpha = 1.0; // reset
+
+          if (bohrPhotonWave.opacity <= 0) {
+            bohrPhotonWave = null;
+          }
+        }
+
+      } else if (currentModel === 'schrodinger') {
+        const center = { x: 200, y: 180 };
+        const cloudType = window.activeCloud || '1s';
+
+        // Particle system for wave probability distribution
+        if (schrodingerParticles.length < 250) {
+          schrodingerParticles.push({
+            angle: Math.random() * Math.PI * 2,
+            dist: 0,
+            opacity: 1
+          });
+        }
+
+        // Generate probability distance using quantum distributions
+        schrodingerParticles.forEach(p => {
+          p.opacity -= 0.01;
+          if (p.opacity <= 0) {
+            p.opacity = 1;
+            p.angle = Math.random() * Math.PI * 2;
+            
+            if (cloudType === '1s') {
+              // High density near center (spherical s orbital)
+              p.dist = Math.pow(Math.random(), 1.5) * 60;
+            } else {
+              // Dumbbell shape p orbital probability density
+              let isLeft = Math.random() < 0.5;
+              let theta = isLeft ? (Math.PI + (Math.random() - 0.5) * 0.8) : ((Math.random() - 0.5) * 0.8);
+              p.angle = theta;
+              p.dist = (0.2 + Math.random() * 0.8) * 80;
+            }
+          }
+
+          let px = center.x + Math.cos(p.angle) * p.dist;
+          let py = center.y + Math.sin(p.angle) * p.dist;
+
+          historyCtx.beginPath();
+          historyCtx.arc(px, py, 2.5, 0, Math.PI * 2);
+          historyCtx.fillStyle = `rgba(0, 245, 212, ${p.opacity * 0.35})`;
+          historyCtx.fill();
+        });
+      }
+
+      historyAnimationId = requestAnimationFrame(renderHistoryFrame);
+    }
+
+
+    /* ==========================================
+       TAB 5: QUANTUM QUIZ & CERTIFICATES
+       ========================================== */
+    let activeQuestions = [];
+    let currentQuestionIdx = 0;
+    let quizScore = 0;
+    let hasAnswered = false;
+
+    function startQuiz() {
+      // Pull 10 random questions from the larger bank
+      const shuffled = [...QUIZ_QUESTION_BANK].sort(() => 0.5 - Math.random());
+      activeQuestions = shuffled.slice(0, 10);
+
+      currentQuestionIdx = 0;
+      quizScore = 0;
+
+      document.getElementById('quiz-start-screen').style.display = 'none';
+      document.getElementById('quiz-results-screen').style.display = 'none';
+      document.getElementById('quiz-game-screen').style.display = 'block';
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      hasAnswered = false;
+      const q = activeQuestions[currentQuestionIdx];
+
+      document.getElementById('q-counter').innerText = `Question ${currentQuestionIdx + 1} of 10`;
+      document.getElementById('q-score').innerText = `Score: ${quizScore}/${currentQuestionIdx}`;
+      document.getElementById('q-text').innerText = q.q;
+      document.getElementById('q-explanation').style.display = 'none';
+      document.getElementById('btn-next-question').style.display = 'none';
+
+      // Update progress bar
+      const progress = ((currentQuestionIdx) / 10) * 100;
+      document.getElementById('q-progress').style.width = `${progress}%`;
+
+      const optionsContainer = document.getElementById('q-options');
+      optionsContainer.innerHTML = '';
+
+      q.a.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-button';
+        btn.innerText = opt;
+        btn.onclick = () => submitAnswer(idx);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function submitAnswer(selectedIdx) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+
+      const q = activeQuestions[currentQuestionIdx];
+      const correctIdx = q.c;
+      const options = document.getElementById('q-options').children;
+
+      // Color coding options
+      for (let i = 0; i < options.length; i++) {
+        options[i].disabled = true;
+        if (i === correctIdx) {
+          options[i].classList.add('correct');
+        } else if (i === selectedIdx) {
+          options[i].classList.add('incorrect');
+        }
+      }
+
+      if (selectedIdx === correctIdx) {
+        quizScore++;
+      }
+
+      // Display scientific explanation
+      const explanationEl = document.getElementById('q-explanation');
+      explanationEl.style.display = 'block';
+      explanationEl.innerHTML = `<strong>Explanation:</strong> ${q.e}`;
+
+      document.getElementById('btn-next-question').style.display = 'inline-flex';
+      document.getElementById('q-score').innerText = `Score: ${quizScore}/${currentQuestionIdx + 1}`;
+    }
+
+    function nextQuestion() {
+      currentQuestionIdx++;
+      if (currentQuestionIdx < 10) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      document.getElementById('quiz-game-screen').style.display = 'none';
+      const resultsEl = document.getElementById('quiz-results-screen');
+      resultsEl.style.display = 'block';
+
+      const heading = document.getElementById('res-heading');
+      const desc = document.getElementById('res-score-desc');
+      const motivation = document.getElementById('res-motivation');
+      const badge = document.getElementById('res-badge');
+      const certForm = document.getElementById('cert-form-box');
+
+      desc.innerText = `You scored ${quizScore} out of 10!`;
+
+      if (quizScore >= 8) {
+        badge.className = "fa-solid fa-award badge-icon";
+        badge.style.color = "var(--color-accent)";
+        heading.innerText = "Quantum Master Certified!";
+        motivation.innerText = "Excellent! You have shown incredible familiarity with nucleons, configurations, nuclear forces, and quantum models. Claim your printable diploma below.";
+        certForm.style.display = 'block';
+        
+        // Render empty/standard certificate first
+        setTimeout(drawCertificate, 100);
+      } else {
+        badge.className = "fa-solid fa-circle-exclamation badge-icon";
+        badge.style.color = "var(--color-proton)";
+        heading.innerText = "Keep Exploring!";
+        motivation.innerText = "You need a score of 8/10 (80%) or higher to unlock your official certified diploma. Keep testing your knowledge in the Sandbox and Timeline panels and try again!";
+        certForm.style.display = 'none';
+      }
+    }
+
+    function retakeQuiz() {
+      startQuiz();
+    }
+
+    /* ==========================================
+       CERTIFICATE EXPORT & CANVAS RENDER
+       ========================================== */
+    function drawCertificate() {
+      const canvas = document.getElementById('certificate-preview-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = 800;
+      canvas.height = 600;
+      canvas.style.display = 'block';
+
+      // Background styling
+      ctx.fillStyle = '#0f111a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Gold Double Border
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(28, 28, canvas.width - 56, canvas.height - 56);
+
+      // Background watermark graphic (atomic orbits)
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.05)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(400, 300, 250, 100, Math.PI / 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(400, 300, 250, 100, -Math.PI / 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Certificate Title
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 36px Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CERTIFICATE OF ACHIEVEMENT', 400, 100);
+
+      // Subtitle
+      ctx.fillStyle = '#f3f4f6';
+      ctx.font = 'italic 16px Playfair Display, serif';
+      ctx.fillText('This quantum rank diploma is officially awarded to', 400, 170);
+
+      // Student Name
+      const nameInput = document.getElementById('cert-student-name').value || 'Quantum Explorer';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 42px Outfit, sans-serif';
+      ctx.fillText(nameInput, 400, 240);
+
+      // Decorative divider
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(250, 280);
+      ctx.lineTo(550, 280);
+      ctx.stroke();
+
+      // Core content
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '16px Plus Jakarta Sans, sans-serif';
+      ctx.fillText('for demonstrating mastery in the field of Atomic Structure.', 400, 320);
+      ctx.fillText('Successfully completed the AtomCraft Interactive Sandbox, historical models,', 400, 355);
+      ctx.fillText(`and scored a stellar ${quizScore * 10}% on the final Quantum Rank Certification.`, 400, 380);
+
+      // Signatures and Seals
+      ctx.fillStyle = '#d4af37';
+      ctx.font = '13px Outfit, sans-serif';
+      ctx.fillText('DATE', 200, 520);
+      ctx.fillText('ATOMIC SCIENCE DEPT', 600, 520);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '15px Plus Jakarta Sans, sans-serif';
+      const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+      ctx.fillText(dateStr, 200, 490);
+      
+      // Stamp illustration
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(400, 470, 35, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#d4af37';
+      ctx.font = 'bold 10px Outfit, sans-serif';
+      ctx.fillText('APPROVED', 400, 473);
+
+      // Cursive digital signature
+      ctx.fillStyle = '#00f5d4';
+      ctx.font = 'italic 20px Playfair Display, serif';
+      ctx.fillText('Niels Bohr', 600, 490);
+    }
+
+    function downloadCertificate() {
+      const canvas = document.getElementById('certificate-preview-canvas');
+      const nameInput = document.getElementById('cert-student-name').value || 'Quantum_Explorer';
+      
+      // Trigger native file download
+      const link = document.createElement('a');
+      link.download = `${nameInput.replace(/\s+/g, '_')}_Quantum_Certificate.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function printCertificate() {
+      const canvas = document.getElementById('certificate-preview-canvas');
+      const dataUrl = canvas.toDataURL('image/png');
+      
+      // Open window print dialogue
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <html>
+          <head>
+            <title>Print Certificate</title>
+            <style>
+              body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #000; }
+              img { max-width: 100%; max-height: 100%; }
+            </style>
+          </head>
+          <body onload="window.print(); window.close();">
+            <img src="${dataUrl}">
+          </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+
+    /* ==========================================
+       INITIALIZATION CALLS
+       ========================================== */
+    window.onload = () => {
+      renderPeriodicTable();
+      showView('home');
+    };
+  </script>
+</body>
+</html>
